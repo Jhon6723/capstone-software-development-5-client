@@ -38,7 +38,6 @@ export class LoginComponent {
 
   // Signals
   isLoading = signal(false);
-  showPassword = signal(false);
 
   loginForm: FormGroup = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -58,10 +57,6 @@ export class LoginComponent {
     if (this.passwordControl.hasError('required')) return 'La contraseña es requerida';
     if (this.passwordControl.hasError('minlength')) return 'Mínimo 6 caracteres';
     return '';
-  }
-
-  togglePasswordVisibility(): void {
-    this.showPassword.update(v => !v);
   }
 
   onSubmit(): void {

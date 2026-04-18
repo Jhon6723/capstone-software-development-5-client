@@ -62,23 +62,14 @@
           <mat-label>Contraseña</mat-label>
           <input
             matInput
-            [type]="showPassword() ? 'text' : 'password'"
+            type="password"
             formControlName="password"
             placeholder="••••••••"
             autocomplete="current-password"
-            [attr.aria-describedby]="passwordControl.touched && passwordControl.invalid ? 'password-error' : null"
+            required
           />
           <mat-icon matPrefix>lock_outline</mat-icon>
-          <button
-            type="button"
-            mat-icon-button
-            matSuffix
-            (click)="togglePasswordVisibility()"
-            [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
-          >
-            <mat-icon>{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
-          </button>
-          <mat-error id="password-error" *ngIf="passwordControl.touched && passwordControl.invalid">
+          <mat-error *ngIf="passwordControl.touched && passwordControl.invalid">
             {{ passwordErrorMessage }}
           </mat-error>
         </mat-form-field>
