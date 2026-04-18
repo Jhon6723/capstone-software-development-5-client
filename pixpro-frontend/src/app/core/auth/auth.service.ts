@@ -42,8 +42,8 @@ export class AuthService {
 
   logout(): void {
     if (this.isBrowser) {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('user_profile');
+      document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      document.cookie = 'user_profile=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     }
     this.currentUser.set(null);
     this.router.navigate(['/auth/login']);
@@ -51,27 +51,32 @@ export class AuthService {
 
   isAuthenticated(): boolean {
     if (!this.isBrowser) return false;
-    return !!localStorage.getItem('access_token');
+    return this.getCookie('access_token') !== null;
   }
 
   getToken(): string | null {
     if (!this.isBrowser) return null;
-    return localStorage.getItem('access_token');
+    return this.getCookie('access_token');
   }
 
   private handleAuthSuccess(response: LoginResponse): void {
     if (this.isBrowser) {
-      localStorage.setItem('access_token', response.accessToken);
-      localStorage.setItem('user_profile', JSON.stringify(response.user));
+      document.cookie = `access_token=${response.accessToken}; path=/; SameSite=Strict`;
+      document.cookie = `user_profile=${JSON.stringify(response.user)}; path=/; SameSite=Strict`;
     }
     this.currentUser.set(response.user);
   }
 
   private loadUserFromStorage(): void {
     if (!this.isBrowser) return;
-    const stored = localStorage.getItem('user_profile');
+    const stored = this.getCookie('user_profile');
     if (stored) {
       this.currentUser.set(JSON.parse(stored));
     }
+  }
+
+  private getCookie(name: string): string | null {
+    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    return match ? decodeURIComponent(match[2]) : null;
   }
 }
