@@ -4,34 +4,40 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { LoginRequest, LoginResponse, UserProfile } from './auth.models';
-import { environment } from '../../../environments/environment';
+import { AppConfigService } from '../config/app.config.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-
-  private readonly API_URL = environment.apiUrl;
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
 
   currentUser = signal<UserProfile | null>(null);
 
-  constructor(private http: HttpClient, private router: Router) {
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+    private config: AppConfigService,
+  ) {
     this.loadUserFromStorage();
   }
 
+  private get API_URL(): string {
+    return this.config.get('apiUrl');
+  }
+
   login(credentials: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.API_URL}/auth/login`, credentials).pipe(
-      tap(response => this.handleAuthSuccess(response))
-    );
+    return this.http
+      .post<LoginResponse>(`${this.API_URL}/auth/login`, credentials)
+      .pipe(tap((response) => this.handleAuthSuccess(response)));
   }
 
   simulateLogin(credentials: LoginRequest): Observable<LoginResponse> {
     const fakeResponse: LoginResponse = {
       accessToken: 'fake-jwt-token-for-development',
       expiresIn: 3600,
-      user: { id: '1', email: credentials.email, name: 'User Demo', role: 'user' }
+      user: { id: '1', email: credentials.email, name: 'User Demo', role: 'user' },
     };
-    return new Observable(observer => {
+    return new Observable((observer) => {
       setTimeout(() => {
         this.handleAuthSuccess(fakeResponse);
         observer.next(fakeResponse);
