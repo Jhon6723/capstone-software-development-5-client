@@ -60,7 +60,6 @@ test:unit:
       };
       EOF
     - npm run test -- --watch=false
-  allow_failure: true
 
 docker:build-push:
   stage: docker
