@@ -8,20 +8,16 @@ export const routes: Routes = [
     pathMatch: 'full'
   },
   {
-    path: 'login',
-    loadComponent: () =>
-      import('./features/auth/login/login').then(m => m.LoginComponent)
-  },
-  {
-    path: 'register',
-    loadComponent: () =>
-      import('./features/auth/login/login').then(m => m.LoginComponent) // placeholder
+    path: '',
+    loadChildren: () =>
+      import('./features/auth/auth.routes').then(m => m.AUTH_ROUTES)
   },
   {
     path: 'dashboard',
     canActivate: [authGuard],
     loadComponent: () =>
-      import('./features/auth/login/login').then(m => m.LoginComponent) // placeholder
+      import('./features/auth/login/login')
+        .then(m => m.LoginComponent) // placeholder
   },
   {
     path: '**',

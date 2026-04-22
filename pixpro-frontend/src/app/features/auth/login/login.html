@@ -1,110 +1,59 @@
-<div class="login-page">
+<div class="form-pane">
 
-  <!-- Branding -->
-  <div class="login-brand">
-    <div class="brand-content">
-      <div class="brand-logo">
-        <mat-icon class="logo-icon">auto_awesome</mat-icon>
-        <span class="brand-name">PixPro</span>
-      </div>
-      <h2 class="brand-tagline">Procesamiento inteligente<br>de imágenes con IA</h2>
-      <p class="brand-description">
-        Transforma y mejora tu contenido visual con tecnología avanzada.
-        Detección de objetos, efectos artísticos y mejoras en tiempo real.
-      </p>
-      <div class="brand-features">
-        <div class="feature-item">
-          <mat-icon>speed</mat-icon>
-          <span>Procesamiento en tiempo real</span>
-        </div>
-        <div class="feature-item">
-          <mat-icon>psychology</mat-icon>
-          <span>Modelos de IA avanzados</span>
-        </div>
-        <div class="feature-item">
-          <mat-icon>cloud_done</mat-icon>
-          <span>Almacenamiento seguro en CDN</span>
-        </div>
-      </div>
+  <div class="form-eyebrow">Acceso</div>
+  <h1 class="form-title">Iniciar sesión</h1>
+  <p class="form-subtitle">Ingresa tus credenciales para continuar en PixPro.</p>
+
+  <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+
+    <div class="glass-field">
+      <label for="login-email">Correo electrónico</label>
+      <input
+        id="login-email"
+        class="glass-input"
+        type="email"
+        formControlName="email"
+        placeholder="tu@email.com"
+        autocomplete="email"
+      />
+      <span class="field-error" *ngIf="emailControl.touched && emailControl.invalid">
+        {{ emailError }}
+      </span>
     </div>
-  </div>
 
-  <!-- Form -->
-  <div class="login-form-panel">
-    <div class="form-container">
-
-      <div class="form-header">
-        <h1 class="form-title">Iniciar sesión</h1>
-        <p class="form-subtitle">Bienvenido de vuelta. Ingresa tus credenciales.</p>
-      </div>
-
-      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
-
-        <!-- Email -->
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Correo electrónico</mat-label>
-          <input
-            matInput
-            type="email"
-            formControlName="email"
-            placeholder="tu@email.com"
-            autocomplete="email"
-            [attr.aria-describedby]="emailControl.touched && emailControl.invalid ? 'email-error' : null"
-          />
-          <mat-icon matPrefix>mail_outline</mat-icon>
-          <mat-error id="email-error" *ngIf="emailControl.touched && emailControl.invalid">
-            {{ emailErrorMessage }}
-          </mat-error>
-        </mat-form-field>
-
-        <!-- Password -->
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Contraseña</mat-label>
-          <input
-            matInput
-            type="password"
-            formControlName="password"
-            placeholder="••••••••"
-            autocomplete="current-password"
-            required
-          />
-          <mat-icon matPrefix>lock_outline</mat-icon>
-          <mat-error *ngIf="passwordControl.touched && passwordControl.invalid">
-            {{ passwordErrorMessage }}
-          </mat-error>
-        </mat-form-field>
-
-        <!-- I forgot my password -->
-        <div class="form-options">
-          <a routerLink="/auth/forgot-password" class="forgot-link">
-            ¿Olvidaste tu contraseña?
-          </a>
-        </div>
-
-        <!-- Submit button -->
-        <!-- Disabled if the form is invalid -->
-        <button
-          mat-flat-button
-          type="submit"
-          class="submit-btn full-width"
-          [disabled]="loginForm.invalid || isLoading()"
-          aria-label="Iniciar sesión"
-        >
-          <mat-spinner *ngIf="isLoading()" diameter="20" class="btn-spinner"></mat-spinner>
-          <span *ngIf="!isLoading()">Iniciar sesión</span>
-          <span *ngIf="isLoading()">Verificando...</span>
-        </button>
-
-      </form>
-
-      <!-- Link to registration -->
-      <div class="form-footer">
-        <p>¿No tienes cuenta?
-          <a routerLink="/auth/register" class="register-link">Regístrate aquí</a>
-        </p>
-      </div>
-
+    <div class="glass-field">
+      <label for="login-password">Contraseña</label>
+      <input
+        id="login-password"
+        class="glass-input"
+        type="password"
+        formControlName="password"
+        placeholder="••••••••"
+        autocomplete="current-password"
+        required
+      />
+      <span class="field-error" *ngIf="passwordControl.touched && passwordControl.invalid">
+        {{ passwordError }}
+      </span>
     </div>
+
+    <button
+      type="submit"
+      class="glass-btn btn-login"
+      [disabled]="loginForm.invalid || isLoading()"
+      aria-label="Iniciar sesión"
+    >
+      <span class="spinner" *ngIf="isLoading()"></span>
+      <span>{{ isLoading() ? 'Verificando...' : 'Iniciar sesión' }}</span>
+    </button>
+
+  </form>
+
+  <div class="form-divider"><span>o</span></div>
+
+  <div class="form-switch">
+    ¿No tienes cuenta?
+    <a routerLink="/register">Regístrate gratis</a>
   </div>
 
 </div>
