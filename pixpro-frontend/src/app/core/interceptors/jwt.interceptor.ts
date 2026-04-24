@@ -1,6 +1,6 @@
-
-import { HttpInterceptorFn, HttpRequest, HttpHandlerFn } from '@angular/common/http';
+import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
+import { catchError, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 
 export const jwtInterceptor: HttpInterceptorFn = (
@@ -10,14 +10,18 @@ export const jwtInterceptor: HttpInterceptorFn = (
   const authService = inject(AuthService);
   const token = authService.getToken();
 
-  if (token) {
-    const authReq = req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-    return next(authReq);
-  }
+  const authReq = token
+    ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
+    : req;
 
-  return next(req);
+  return next(authReq).pipe(
+    catchError((error: HttpErrorResponse) => {
+
+      if (error.status === 401) {
+        authService.logout();
+      }
+
+      return throwError(() => error);
+    })
+  );
 };
