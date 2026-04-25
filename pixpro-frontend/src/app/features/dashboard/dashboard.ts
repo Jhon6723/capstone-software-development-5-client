@@ -1,20 +1,19 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
+import { NavbarComponent } from '../../shared/components/navbar/navbar';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, NavbarComponent, RouterLink],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
 })
 export class DashboardComponent {
 
   private authService = inject(AuthService);
-  private router = inject(Router);
-
   currentUser = this.authService.currentUser;
 
   get firstName(): string {
@@ -23,39 +22,38 @@ export class DashboardComponent {
     return name.split(' ')[0] || 'Usuario';
   }
 
-  // Placeholders for next phases
   quickAccessCards = [
     {
       icon: '◎',
-      title: 'Detección de objetos',
-      description: 'Identifica y etiqueta objetos en tus imágenes automáticamente.',
-      tag: 'Fase 2',
-      color: 'card-blue'
+      title: 'Subir imágenes',
+      description: 'Sube y gestiona tus imágenes para procesarlas con IA.',
+      tag: 'Disponible',
+      color: 'card-blue',
+      route: '/upload'
     },
     {
       icon: '✦',
       title: 'Filtros artísticos',
       description: 'Aplica estilos artísticos generados por IA a tus fotos.',
       tag: 'Fase 2',
-      color: 'card-purple'
+      color: 'card-purple',
+      route: null
     },
     {
       icon: '↑',
       title: 'Mejora de resolución',
       description: 'Aumenta la calidad y resolución de tus imágenes con IA.',
       tag: 'Fase 2',
-      color: 'card-teal'
+      color: 'card-teal',
+      route: null
     },
     {
       icon: '◷',
       title: 'Mis proyectos',
       description: 'Accede y gestiona todos tus proyectos de procesamiento.',
       tag: 'Próximamente',
-      color: 'card-indigo'
+      color: 'card-indigo',
+      route: null
     }
   ];
-
-  logout(): void {
-    this.authService.logout();
-  }
 }
