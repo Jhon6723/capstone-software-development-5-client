@@ -1,34 +1,12 @@
 <div class="dashboard-root">
 
-  <!-- Background orbs -->
   <div class="orb orb-1"></div>
   <div class="orb orb-2"></div>
   <div class="orb orb-3"></div>
   <div class="noise-overlay"></div>
 
-  <!-- Navbar -->
-  <nav class="navbar">
-    <div class="nav-brand">
-      <div class="logo-mark"><span>✦</span></div>
-      <span class="logo-text">PixPro</span>
-    </div>
+  <app-navbar></app-navbar>
 
-    <div class="nav-actions">
-      <div class="nav-user" *ngIf="currentUser() as user">
-        <div class="user-avatar">
-          {{ user.name.charAt(0).toUpperCase() }}
-        </div>
-        <span class="user-name">{{ user.name }}</span>
-      </div>
-
-      <button class="logout-btn" (click)="logout()" aria-label="Cerrar sesión">
-        <span class="logout-icon">⏻</span>
-        <span>Cerrar sesión</span>
-      </button>
-    </div>
-  </nav>
-
-  <!-- Main content -->
   <main class="dashboard-main">
 
     <div class="welcome-section">
@@ -40,31 +18,31 @@
         Hola, <span class="user-highlight">{{ firstName }}</span> 👋
       </h1>
       <p class="welcome-subtitle">
-        Bienvenido a PixPro. Explora las herramientas de procesamiento de imágenes con IA
-        disponibles para ti.
+        Bienvenido a PixPro. Explora las herramientas de procesamiento
+        de imágenes con IA disponibles para ti.
       </p>
     </div>
 
-    <!-- Quick access cards -->
     <div class="cards-section">
       <h2 class="section-title">Acceso rápido</h2>
       <div class="cards-grid">
-        <div
-          class="quick-card"
-          [class]="card.color"
-          *ngFor="let card of quickAccessCards"
-        >
-          <div class="card-header">
-            <div class="card-icon">{{ card.icon }}</div>
-            <span class="card-tag">{{ card.tag }}</span>
+        @for (card of quickAccessCards; track card.title) {
+          <div class="quick-card" [class]="card.color">
+            <div class="card-header">
+              <div class="card-icon">{{ card.icon }}</div>
+              <span class="card-tag">{{ card.tag }}</span>
+            </div>
+            <h3 class="card-title">{{ card.title }}</h3>
+            <p class="card-desc">{{ card.description }}</p>
+            <div class="card-footer">
+              <span class="coming-soon">
+                {{ card.route ? 'Ir ahora' : 'Disponible en ' + card.tag }}
+              </span>
+              <a *ngIf="card.route" [routerLink]="card.route" class="arrow-link">→</a>
+              <span *ngIf="!card.route" class="arrow-icon">→</span>
+            </div>
           </div>
-          <h3 class="card-title">{{ card.title }}</h3>
-          <p class="card-desc">{{ card.description }}</p>
-          <div class="card-footer">
-            <span class="coming-soon">Disponible en {{ card.tag }}</span>
-            <span class="arrow-icon">→</span>
-          </div>
-        </div>
+        }
       </div>
     </div>
 

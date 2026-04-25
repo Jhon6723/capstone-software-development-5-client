@@ -20,6 +20,13 @@ export const routes: Routes = [
         .then(m => m.DashboardComponent)
   },
   {
+    path: 'upload',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/images/upload-page/upload-page')
+        .then(m => m.UploadPageComponent)
+  },
+  {
     path: '**',
     redirectTo: 'login'
   }

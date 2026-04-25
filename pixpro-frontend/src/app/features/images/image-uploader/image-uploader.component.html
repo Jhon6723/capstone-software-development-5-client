@@ -1,0 +1,81 @@
+<input
+  type="file"
+  #fileInput
+  multiple
+  accept="image/jpeg,image/png"
+  (change)="onFilesSelected($event)"
+  style="display: none"
+/>
+
+<div class="uploader-card">
+
+  <!-- Header -->
+  <div class="card-header">
+    <div>
+      <h2 class="card-title">Subir imágenes</h2>
+      <p class="card-subtitle">JPG, PNG · Máx. 5MB por archivo · Hasta 4 imágenes</p>
+    </div>
+    <span class="card-badge">PixPro</span>
+  </div>
+
+  <!-- Drop zone -->
+  <div class="drop-zone" (click)="fileInput.click()">
+    <div class="drop-icon">↑</div>
+    <p class="drop-title">Arrastra tus imágenes aquí</p>
+    <p class="drop-sub">o <span class="drop-link">selecciona desde tu dispositivo</span></p>
+  </div>
+
+  <!-- Actions -->
+  <div class="actions-row">
+    <button class="btn-primary" (click)="fileInput.click()">
+      <span>↑</span>
+      <span>Seleccionar imágenes</span>
+    </button>
+
+    @if (imagePreviews().length > 0) {
+      <button class="btn-ghost" (click)="clearAllImages()">
+        <span>✕</span>
+        <span>Limpiar todas ({{ imagePreviews().length }})</span>
+      </button>
+    }
+  </div>
+
+  @if (globalErrorMessage()) {
+    <div class="error-box">
+      <span class="error-dot"></span>
+      <span class="error-text">{{ globalErrorMessage() }}</span>
+    </div>
+  }
+
+  <!-- Processing -->
+  @if (isProcessing()) {
+    <div class="processing-box">
+      <span class="spinner"></span>
+      <span class="processing-text">Procesando imágenes...</span>
+    </div>
+  }
+
+  @if (imagePreviews().length > 0) {
+    <div class="previews-section">
+      <p class="section-label">Vista previa · {{ imagePreviews().length }} imagen{{ imagePreviews().length > 1 ? 'es' : '' }}</p>
+      <div class="previews-grid">
+        @for (preview of imagePreviews(); track preview.file.name; let i = $index) {
+          <div class="img-card">
+            <div class="img-wrapper">
+              <img
+                [src]="preview.previewUrl"
+                [alt]="preview.file.name"
+              />
+              <button class="img-remove" (click)="removeImage(i)" aria-label="Eliminar imagen">✕</button>
+            </div>
+            <div class="img-info">
+              <p class="img-name">{{ preview.file.name }}</p>
+              <p class="img-size">{{ formatFileSize(preview.file.size) }}</p>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+</div>
