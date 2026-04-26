@@ -1,0 +1,9 @@
+To perform the tests E2E, the following files are needed in the "cypress/fixtures" folder:
+- image1.jpg
+- image2.jpg
+- image3.png
+- image4.jpg
+- image5.jpg
+- large.jpg (must be a file larger than 5MB)
+- document.pdf
+- user.json (add a valid username and password)
