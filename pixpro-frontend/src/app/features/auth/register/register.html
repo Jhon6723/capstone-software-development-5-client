@@ -1,11 +1,9 @@
 <div class="form-pane">
-
   <div class="form-eyebrow">Registro</div>
   <h1 class="form-title">Crear cuenta</h1>
   <p class="form-subtitle">Únete a PixPro y empieza a transformar tus imágenes con IA.</p>
 
   <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate>
-
     <div class="name-row">
       <div class="glass-field">
         <label for="reg-firstname">Nombre</label>
@@ -104,8 +102,19 @@
       <span class="spinner" *ngIf="isLoading()"></span>
       <span>{{ isLoading() ? 'Creando cuenta...' : 'Crear cuenta' }}</span>
     </button>
-
   </form>
+
+  <div class="form-divider"><span>o registrate con</span></div>
+
+  <button type="button" class="social-btn google-btn" (click)="loginWithGoogle()">
+    <img src="assets/icons/google.svg" alt="Google" width="20" />
+    Registrarse con Google
+  </button>
+
+  <button type="button" class="social-btn microsoft-btn" (click)="loginWithMicrosoft()">
+    <img src="assets/icons/microsoft.svg" alt="Microsoft" width="20" />
+    Registrarse con Microsoft
+  </button>
 
   <div class="form-divider"><span>o</span></div>
 
@@ -113,5 +122,4 @@
     ¿Ya tienes cuenta?
     <a routerLink="/login">Inicia sesión aquí</a>
   </div>
-
 </div>
