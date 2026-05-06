@@ -3,8 +3,8 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
-import { LoginRequest, LoginResponse, UserProfile } from './auth.models';
-import { AppConfigService } from '../config/app.config.service';
+import { LoginRequest, LoginResponse, UserResponse, UserProfile } from './auth.models';
+import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -16,13 +16,13 @@ export class AuthService {
   constructor(
     private http: HttpClient,
     private router: Router,
-    private config: AppConfigService,
+    // private config: AppConfigService,
   ) {
     this.loadUserFromStorage();
   }
 
   private get API_URL(): string {
-    return this.config.get('apiUrl');
+    return environment.apiUrl;
   }
 
   login(credentials: LoginRequest): Observable<LoginResponse> {
@@ -31,19 +31,8 @@ export class AuthService {
       .pipe(tap((response) => this.handleAuthSuccess(response)));
   }
 
-  simulateLogin(credentials: LoginRequest): Observable<LoginResponse> {
-    const fakeResponse: LoginResponse = {
-      accessToken: 'fake-jwt-token-for-development',
-      expiresIn: 3600,
-      user: { id: '1', email: credentials.email, name: 'User Demo', role: 'user' },
-    };
-    return new Observable((observer) => {
-      setTimeout(() => {
-        this.handleAuthSuccess(fakeResponse);
-        observer.next(fakeResponse);
-        observer.complete();
-      }, 800);
-    });
+  register(userData: { email: string; password: string }): Observable<UserResponse> {
+    return this.http.post<UserResponse>(`${this.API_URL}/auth/register`, userData);
   }
 
   logout(): void {
@@ -67,10 +56,16 @@ export class AuthService {
 
   private handleAuthSuccess(response: LoginResponse): void {
     if (this.isBrowser) {
-      document.cookie = `access_token=${response.accessToken}; path=/; SameSite=Strict`;
-      document.cookie = `user_profile=${JSON.stringify(response.user)}; path=/; SameSite=Strict`;
+      document.cookie = `access_token=${response.token}; path=/; SameSite=Strict`;
+      const userProfile: UserProfile = {
+        id: response.user.id,
+        email: response.user.email,
+        name: response.user.email.split('@')[0],
+        role: 'user'
+      };
+      document.cookie = `user_profile=${JSON.stringify(userProfile)}; path=/; SameSite=Strict`;
+      this.currentUser.set(userProfile);
     }
-    this.currentUser.set(response.user);
   }
 
   private loadUserFromStorage(): void {

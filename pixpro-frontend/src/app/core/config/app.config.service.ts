@@ -13,9 +13,10 @@ export class AppConfigService {
   async load(): Promise<void> {
     if (!this.isBrowser) return;
     try {
-      const data = await firstValueFrom(this.http.get<Record<string, string>>('/config.json'));
-      this.config = data;
-    } catch {
+      //const data = await firstValueFrom(this.http.get<Record<string, string>>('/assets/config.json'));
+      //this.config = data;
+    } catch (error) {
+      console.error('Error loading config.json', error);
       this.config = {};
     }
   }
