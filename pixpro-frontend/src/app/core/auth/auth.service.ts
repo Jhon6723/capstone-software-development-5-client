@@ -3,6 +3,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
+import { AuthService as Auth0Service } from '@auth0/auth0-angular';
 import { LoginRequest, LoginResponse, UserProfile } from './auth.models';
 import { AppConfigService } from '../config/app.config.service';
 
@@ -10,6 +11,7 @@ import { AppConfigService } from '../config/app.config.service';
 export class AuthService {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
+  private readonly auth0 = inject(Auth0Service);
 
   currentUser = signal<UserProfile | null>(null);
 
@@ -28,7 +30,7 @@ export class AuthService {
   login(credentials: LoginRequest): Observable<LoginResponse> {
     return this.http
       .post<LoginResponse>(`${this.API_URL}/auth/login`, credentials)
-      .pipe(tap((response) => this.handleAuthSuccess(response)));
+      .pipe(tap(response => this.handleAuthSuccess(response)));
   }
 
   simulateLogin(credentials: LoginRequest): Observable<LoginResponse> {
@@ -37,7 +39,7 @@ export class AuthService {
       expiresIn: 3600,
       user: { id: '1', email: credentials.email, name: 'User Demo', role: 'user' },
     };
-    return new Observable((observer) => {
+    return new Observable(observer => {
       setTimeout(() => {
         this.handleAuthSuccess(fakeResponse);
         observer.next(fakeResponse);
@@ -46,13 +48,35 @@ export class AuthService {
     });
   }
 
+  loginWithGoogle(): void {
+    this.auth0.loginWithRedirect({
+      authorizationParams: { connection: 'google-oauth2' },
+    });
+  }
+
+  loginWithMicrosoft(): void {
+    this.auth0.loginWithRedirect({
+      authorizationParams: { connection: 'windowslive' },
+    });
+  }
+
+  handleAuth0Success(token: string, user: UserProfile): void {
+    if (this.isBrowser) {
+      document.cookie = `access_token=${token}; path=/; SameSite=Strict`;
+      document.cookie = `user_profile=${JSON.stringify(user)}; path=/; SameSite=Strict`;
+    }
+    this.currentUser.set(user);
+  }
+
   logout(): void {
     if (this.isBrowser) {
       document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
       document.cookie = 'user_profile=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     }
     this.currentUser.set(null);
-    this.router.navigate(['/auth/login']);
+    this.auth0.logout({
+      logoutParams: { returnTo: window.location.origin + '/auth/login' },
+    });
   }
 
   isAuthenticated(): boolean {

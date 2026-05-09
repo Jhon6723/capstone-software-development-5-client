@@ -1,0 +1,9 @@
+{
+  "apiUrl": "",
+  "auth0": {
+    "domain": "",
+    "clientId": "",
+    "audience": "",
+    "redirectUri": ""
+  }
+}
