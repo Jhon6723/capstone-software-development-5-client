@@ -47,16 +47,14 @@ export class LoginComponent {
   onSubmit(): void {
     if (this.loginForm.invalid || this.isLoading()) return;
     this.isLoading.set(true);
-
-    // TODO: cambiar simulateLogin por login() cuando el backend esté listo
-    this.authService.simulateLogin(this.loginForm.getRawValue()).subscribe({
+    this.authService.login(this.loginForm.getRawValue()).subscribe({
       next: () => {
         this.isLoading.set(false);
         this.router.navigate(['/dashboard']);
       },
       error: err => {
         this.isLoading.set(false);
-        const msg = err?.error?.message || 'Credenciales incorrectas. Intenta nuevamente.';
+        const msg = err.error?.message || 'Credenciales incorrectas. Intenta nuevamente.';
         this.snackBar.open(msg, 'Cerrar', { duration: 4000 });
       },
     });

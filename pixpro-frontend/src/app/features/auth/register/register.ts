@@ -38,6 +38,7 @@ export class RegisterComponent {
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
   private authService = inject(AuthService);
+
   isLoading = signal(false);
 
   registerForm: FormGroup = this.fb.group(
@@ -118,16 +119,27 @@ export class RegisterComponent {
     if (this.registerForm.invalid || this.isLoading()) return;
     this.isLoading.set(true);
 
-    // TODO: reemplazar con authService.register() cuando el backend esté listo
-    setTimeout(() => {
-      this.isLoading.set(false);
-      this.snackBar.open('¡Cuenta creada exitosamente! Redirigiendo...', '', {
-        duration: 2000,
-        horizontalPosition: 'center',
-        verticalPosition: 'bottom',
-      });
-      setTimeout(() => this.router.navigate(['/login']), 2000);
-    }, 1000);
+    const request = {
+      email: this.email.value,
+      password: this.password.value
+    };
+
+    this.authService.register(request).subscribe({
+      next: () => {
+        this.isLoading.set(false);
+        this.snackBar.open('¡Cuenta creada exitosamente! Redirigiendo...', '', {
+          duration: 2000,
+          horizontalPosition: 'center',
+          verticalPosition: 'bottom',
+        });
+        setTimeout(() => this.router.navigate(['/login']), 2000);
+      },
+      error: (err) => {
+        this.isLoading.set(false);
+        const msg = err.error?.message || 'Error al registrar. Intenta de nuevo.';
+        this.snackBar.open(msg, 'Cerrar', { duration: 4000 });
+      }
+    });
   }
 
   loginWithGoogle(): void {
