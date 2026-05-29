@@ -1,59 +1,211 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/auth/auth.service';
 import { NavbarComponent } from '../../shared/components/navbar/navbar';
+import { ActionId } from '../../core/models/project.model';
+
+type ActivePanel = ActionId | null;
+
+interface ActionCard {
+  id: ActionId;
+  title: string;
+  description: string;
+  gradient: string;
+  opensPanel: boolean;
+}
+
+interface Effect {
+  id: string;
+  name: string;
+  gradient: string;
+}
+
+interface Project {
+  id: string;
+  name: string;
+  model: string;
+  imageCount: number;
+  date: string;
+  colors: string[];
+}
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, NavbarComponent, RouterLink],
+  imports: [CommonModule, NavbarComponent, FormsModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
 })
 export class DashboardComponent {
 
   private authService = inject(AuthService);
+  private router = inject(Router);
+
   currentUser = this.authService.currentUser;
+  activePanel = signal<ActivePanel>(null);
+  promptText = signal('');
+  selectedEffect = signal<string | null>(null);
+  customEffectPrompt = signal('');
 
   get firstName(): string {
-    const name = this.currentUser()?.name;
-    if (!name) return 'Usuario';
-    return name.split(' ')[0] || 'Usuario';
+    const user = this.currentUser() as any;
+    if (!user) return 'Usuario';
+    return user.firstName || user.name?.split(' ')[0] || 'Usuario';
   }
 
-  quickAccessCards = [
+  readonly actionCards: ActionCard[] = [
     {
-      icon: '◎',
-      title: 'Subir imágenes',
-      description: 'Sube y gestiona tus imágenes para procesarlas con IA.',
-      tag: 'Disponible',
-      color: 'card-blue',
-      route: '/upload'
+      id: 'upload',
+      title: 'Mejora de imágenes',
+      description: 'Aumenta la resolución, nitidez y calidad visual de tus fotos',
+      gradient: 'linear-gradient(135deg, #0d9488 0%, #14b8a6 50%, #34d399 100%)',
+      opensPanel: false
     },
     {
-      icon: '✦',
-      title: 'Filtros artísticos',
-      description: 'Aplica estilos artísticos generados por IA a tus fotos.',
-      tag: 'Fase 2',
-      color: 'card-purple',
-      route: null
+      id: 'prompt',
+      title: 'Crear desde prompt',
+      description: 'Genera imágenes a partir de una descripción de texto',
+      gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+      opensPanel: true
     },
     {
-      icon: '↑',
-      title: 'Mejora de resolución',
-      description: 'Aumenta la calidad y resolución de tus imágenes con IA.',
-      tag: 'Fase 2',
-      color: 'card-teal',
-      route: null
-    },
-    {
-      icon: '◷',
-      title: 'Mis proyectos',
-      description: 'Accede y gestiona todos tus proyectos de procesamiento.',
-      tag: 'Próximamente',
-      color: 'card-indigo',
-      route: null
+      id: 'effects',
+      title: 'Aplicar efectos artísticos',
+      description: 'Transforma tus imágenes con estilos artísticos de IA',
+      gradient: 'linear-gradient(135deg, #f43f5e 0%, #f97316 100%)',
+      opensPanel: true
     }
   ];
+
+  readonly effects: Effect[] = [
+    { id: 'ghibli',    name: 'Ghibli',        gradient: 'linear-gradient(135deg, #059669, #34d399)' },
+    { id: 'anime',     name: 'Anime',          gradient: 'linear-gradient(135deg, #db2777, #a855f7)' },
+    { id: 'cyberpunk', name: 'Cyberpunk',      gradient: 'linear-gradient(135deg, #2563eb, #06b6d4)' },
+    { id: 'custom',    name: 'Personalizado',  gradient: 'linear-gradient(135deg, #d97706, #f59e0b)' }
+  ];
+
+  readonly recentProjects: Project[] = [
+    { id: '1', name: 'Paisajes Ghibli', model: 'Ghibli v2.1', imageCount: 12, date: 'Hace 2 días', colors: ['#059669','#34d399','#10b981','#000'] },
+    { id: '2', name: 'Retratos Anime', model: 'Anime XL', imageCount: 8, date: 'Hace 5 días', colors: ['#db2777','#c026d3','#a855f7','#000'] },
+    { id: '3', name: 'Ciudad Cyberpunk', model: 'CyberDiffusion', imageCount: 6, date: 'Hace 1 semana', colors: ['#2563eb','#0891b2','#7c3aed','#000'] }
+  ];
+
+  // Iconos SVG
+  getCardIcon(id: ActionId): string {
+    const icons: Record<ActionId, string> = {
+      upload: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>`,
+      prompt: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/><line x1="15" x2="19" y1="5" y2="9"/></svg>`,
+      effects: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="m16.2 7.8 2.9-2.9"/><path d="M18 12h4"/><path d="m16.2 16.2 2.9 2.9"/><path d="M12 18v4"/><path d="m4.9 19.1 2.9-2.9"/><path d="M2 12h4"/><path d="m4.9 4.9 2.9 2.9"/><circle cx="12" cy="12" r="3"/></svg>`
+    };
+    return icons[id];
+  }
+
+  // Limpieza de estado al cambiar panel
+  private clearPanelState(panel: ActivePanel): void {
+    if (panel !== 'prompt') this.promptText.set('');
+    if (panel !== 'effects') {
+      this.selectedEffect.set(null);
+      this.customEffectPrompt.set('');
+    }
+  }
+
+  // Lógica de selección de cards
+  selectCard(id: ActionId): void {
+    const card = this.actionCards.find(c => c.id === id);
+    if (!card) return;
+
+    if (card.opensPanel) {
+      const isOpen = this.activePanel() === id;
+      this.activePanel.set(isOpen ? null : id);
+      this.clearPanelState(isOpen ? null : id);
+    } else {
+      this.router.navigate(['/upload'], { queryParams: { action: id } });
+    }
+  }
+
+  isActive(id: ActionId): boolean {
+    return this.activePanel() === id;
+  }
+
+  // Panel: Prompt
+  updatePrompt(value: string): void {
+    this.promptText.set(value);
+  }
+
+  addHint(hint: string): void {
+    const current = this.promptText();
+    const separator = current && !current.endsWith(' ') ? ' ' : '';
+    this.promptText.set(`${current}${separator}${hint} `);
+  }
+
+  get canContinuePrompt(): boolean {
+    return this.promptText().trim().length > 0;
+  }
+
+  continueWithPrompt(): void {
+    if (!this.canContinuePrompt) return;
+    this.router.navigate(['/upload'], {
+      queryParams: { action: 'prompt', prompt: this.promptText() }
+    });
+  }
+
+  // Panel: Effects
+  selectEffect(id: string): void {
+    this.selectedEffect.set(id);
+  }
+
+  updateCustomEffectPrompt(value: string): void {
+    this.customEffectPrompt.set(value);
+  }
+
+  addCustomHint(hint: string): void {
+    const current = this.customEffectPrompt();
+    const separator = current && !current.endsWith(' ') ? ' ' : '';
+    this.customEffectPrompt.set(`${current}${separator}${hint} `);
+  }
+
+  get canContinueEffect(): boolean {
+    const effect = this.selectedEffect();
+    if (!effect) return false;
+    if (effect === 'custom') {
+      return this.customEffectPrompt().trim().length > 0;
+    }
+    return true;
+  }
+
+  continueWithEffect(): void {
+    if (!this.canContinueEffect) return;
+    
+    const effect = this.selectedEffect();
+    const prompt = effect === 'custom' ? this.customEffectPrompt() : undefined;
+    
+    const queryParams: any = { action: 'effects', effect };
+    if (prompt) queryParams.prompt = prompt;
+    
+    this.router.navigate(['/upload'], { queryParams });
+  }
+
+  // Navegación a proyectos
+  viewAllProjects(): void {
+    this.router.navigate(['/projects']);
+  }
+
+  viewProject(id: string): void {
+    this.router.navigate(['/project', id]);
+  }
+
+  // Efecto glow siguiendo el mouse
+  @HostListener('document:mousemove', ['$event'])
+  onMouseMove(event: MouseEvent): void {
+    const cards = document.querySelectorAll('.action-card') as NodeListOf<HTMLElement>;
+    cards.forEach(card => {
+      const rect = card.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      card.style.setProperty('--mouse-x', `${x}px`);
+      card.style.setProperty('--mouse-y', `${y}px`);
+    });
+  }
 }

@@ -1,0 +1,300 @@
+@use '../../../styles.scss' as *;
+
+$text-primary:   rgba(255, 255, 255, 0.95);
+$text-secondary: rgba(255, 255, 255, 0.65);
+$text-muted:     rgba(255, 255, 255, 0.4);
+$glass-border:   rgba(255, 255, 255, 0.15);
+$glass-bg:       rgba(255, 255, 255, 0.06);
+$transition:     0.3s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-sm:  0.2s ease;
+
+// Mixin para centrar contenido con máx-width
+@mixin content-container {
+  width: 100%;
+  max-width: 1200px;  // ← Ancho máximo para mejor lectura
+  margin: 0 auto;     // ← Centrado horizontal
+  padding: 0 1.5rem;  // ← Margen lateral en móvil
+}
+
+:host {
+  display: block;
+}
+
+.dashboard-main {
+  @include content-container;  // ← Aplica centrado y padding
+  padding-top: 5rem;
+  padding-bottom: 3rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.projects-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;  // ← Espaciado reducido (era 2rem+)
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0;  // ← Sin padding extra, lo maneja el contenedor
+}
+
+.projects-title {
+  font-size: 1.4rem;  // ← Ligeramente más compacto
+  font-weight: 600;
+  color: $text-primary;
+  margin: 0;
+}
+
+.search-input {
+  padding: 0.55rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.08);
+  color: white;
+  font-size: 0.85rem;
+  width: 100%;
+  max-width: 240px;  // ← Ancho máximo controlado
+  transition: all 0.2s ease;
+
+  &::placeholder {
+    color: $text-secondary;
+  }
+
+  &:focus {
+    border-color: rgba(6, 182, 212, 0.6);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2);
+  }
+}
+
+.loading-grid,
+.projects-mosaic {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));  // ← Cards un poco más compactas
+  gap: 1rem;  // ← Gap reducido (era 1.25rem)
+  margin: 0;  // ← Sin margen extra
+}
+
+.project-card {
+  background: $glass-bg;
+  border: 0.5px solid $glass-border;
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all $transition;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+  }
+}
+
+.project-mosaic-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  height: 160px;  // ← Altura reducida (era 180px)
+}
+
+.mosaic-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all $transition-sm;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+    opacity: 0;
+    transition: opacity $transition-sm;
+    border-radius: 6px;
+    pointer-events: none;
+  }
+
+  &:hover::after {
+    opacity: 1;
+  }
+}
+
+.project-info {
+  padding: 0.75rem 1rem;  // ← Padding interno reducido
+}
+
+.project-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: $text-primary;
+  margin: 0 0 0.2rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.project-meta {
+  font-size: 0.72rem;
+  color: $text-secondary;
+  margin: 0;
+}
+
+/* Skeleton loading */
+.skeleton {
+  animation: pulse 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.skeleton-grid {
+  background: rgba(255,255,255,0.05);
+}
+
+.skeleton-line {
+  height: 12px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 6px;
+  margin: 0.35rem 0;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 2.5rem 1rem;  // ← Padding más equilibrado
+  color: $text-secondary;
+  margin: 2rem auto;
+  max-width: 400px;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0 0;  // ← Padding superior reducido
+  margin-top: 0.5rem;
+}
+
+.btn-load-more {
+  padding: 0.55rem 1.6rem;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 20px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.85rem;
+
+  &:hover:not(:disabled) {
+    background: rgba(255,255,255,0.2);
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+/* Botón continuar (reutilizado) */
+.btn-continue {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.6rem 1.5rem;
+  background: linear-gradient(135deg, #06b6d4, #14b8a6);
+  border: none;
+  border-radius: 24px;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 0.75rem;
+  transition: all 0.3s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(6, 182, 212, 0.6);
+  }
+}
+
+/* Responsive refinado */
+@media (max-width: 768px) {
+  .dashboard-main {
+    padding: 4.5rem 1rem 2rem;  // ← Padding lateral en móvil
+  }
+  
+  .projects-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .search-input {
+    width: 100%;
+    max-width: none;
+  }
+  
+  .projects-mosaic {
+    grid-template-columns: 1fr;  // ← 1 columna en móvil
+    gap: 0.85rem;
+  }
+  
+  .project-mosaic-grid {
+    height: 140px;
+  }
+  
+  .projects-title {
+    font-size: 1.25rem;
+  }
+}
+
+@media (min-width: 1400px) {
+  .projects-mosaic {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+}
+
+/* Botón Volver */
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 12px;
+  color: white;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+  margin: 0 0 1rem 0;
+  transition: all 0.2s ease;
+  font-size: 0.85rem;
+  align-self: flex-start;
+
+  &:hover {
+    background: rgba(255,255,255,0.2);
+    transform: translateX(-2px);
+    border-color: rgba(255,255,255,0.3);
+  }
+
+  &:active {
+    transform: translateX(0);
+    transition-duration: 0.1s;
+  }
+
+  svg {
+    stroke: currentColor;
+    transition: transform 0.2s ease;
+  }
+
+  &:hover svg {
+    transform: translateX(-2px);
+  }
+}
