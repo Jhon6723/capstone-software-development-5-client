@@ -1,4 +1,6 @@
-import { Component, EventEmitter, Output, signal } from '@angular/core';
+import { Component, EventEmitter, Output, signal, inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { UploadStateService } from '../../../core/services/upload-state.service';
 
 interface ImagePreview {
   file: File;
@@ -10,10 +12,13 @@ interface ImagePreview {
   selector: 'app-image-uploader',
   standalone: true,
   templateUrl: './image-uploader.component.html',
-  styleUrls: ['./image-uploader.component.scss'],
+  styleUrl: './image-uploader.component.scss',
 })
 export class ImageUploaderComponent {
   @Output() imagesSelected = new EventEmitter<File[]>();
+
+  private router = inject(Router);
+  private uploadState = inject(UploadStateService);
 
   imagePreviews = signal<ImagePreview[]>([]);
   globalErrorMessage = signal<string | null>(null);
@@ -25,19 +30,34 @@ export class ImageUploaderComponent {
   private readonly MAX_FILES = 4;
   private readonly ALLOWED_TYPES = ['image/jpeg', 'image/png'];
 
+  // Método para navegar a página de procesamiento
+  goToProcessing(): void {
+    const previews = this.imagePreviews();
+    if (previews.length === 0) return;
+
+    const files = previews.map(p => p.file);
+
+    // Guardar contexto en el servicio mock
+    this.uploadState.setContext({
+      images: files,
+      // Agregar más datos si vienen del dashboard:
+      // action: 'upload', prompt: ..., effect: ...
+    });
+
+    // Navegar a página de procesamiento
+    this.router.navigate(['/processing']);
+  }
+
   onFilesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const files = input.files;
 
     this.globalErrorMessage.set(null);
 
-    if (!files || files.length === 0) {
-      return;
-    }
+    if (!files || files.length === 0) return;
 
-    // Validate max of images
     if (this.imagePreviews().length + files.length > this.MAX_FILES) {
-      this.globalErrorMessage.set(`Solo puedes seleccionar maximo ${this.MAX_FILES} imagenes`);
+      this.globalErrorMessage.set(`Solo puedes seleccionar máximo ${this.MAX_FILES} imágenes`);
       input.value = '';
       return;
     }
@@ -45,19 +65,18 @@ export class ImageUploaderComponent {
     this.isProcessing.set(true);
     this.pendingReads = 0;
 
-    // Validate files
     const validFiles: File[] = [];
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
 
       if (!this.ALLOWED_TYPES.includes(file.type)) {
-        this.globalErrorMessage.set(`Formato no valido: ${file.name}. Solo JPG o PNG`);
+        this.globalErrorMessage.set(`Formato no válido: ${file.name}. Solo JPG o PNG`);
         continue;
       }
 
       const maxSizeBytes = this.MAX_SIZE_MB * 1024 * 1024;
       if (file.size > maxSizeBytes) {
-        this.globalErrorMessage.set(`Imagen excede tamaño: ${file.name}. Maximo ${this.MAX_SIZE_MB}MB.`);
+        this.globalErrorMessage.set(`Imagen excede tamaño: ${file.name}. Máximo ${this.MAX_SIZE_MB}MB.`);
         continue;
       }
 
@@ -70,7 +89,6 @@ export class ImageUploaderComponent {
       return;
     }
 
-    // Process files
     this.pendingReads = validFiles.length;
     const currentPreviews = [...this.imagePreviews()];
 

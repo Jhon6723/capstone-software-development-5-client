@@ -1,0 +1,61 @@
+<div class="dashboard-root">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+  <div class="noise-overlay"></div>
+
+  <main class="processing-main">
+    <!-- Estado de conexión WebSocket -->
+    <div class="connection-status" [class.connected]="isConnected()" [class.disconnected]="!isConnected()">
+      <span class="status-dot"></span>
+      <span>{{ isConnected() ? 'Conexión en tiempo real activa' : 'Reconectando al servidor...' }}</span>
+    </div>
+
+    <!-- Panel Glassmorphism Principal -->
+    <div class="processing-card">
+      <div class="card-header">
+        <h1 class="processing-title">Procesando tu proyecto</h1>
+        <p class="processing-subtitle">{{ message() }}</p>
+      </div>
+
+      <!-- Barra de Progreso -->
+      <div class="progress-section">
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" [style.width.%]="progress()"></div>
+        </div>
+        <div class="progress-status">
+          <span class="status-badge" [class]="status()">{{ getStatusLabel(status()) }}</span>
+          <span class="progress-percent">{{ progress() }}%</span>
+        </div>
+      </div>
+
+      <!-- Pasos del Proceso -->
+      <div class="steps-grid">
+        <div class="step" [class.active]="isStepActive('uploading')">
+          <span class="step-icon">📤</span>
+          <span class="step-label">Subida</span>
+        </div>
+        <div class="step" [class.active]="isStepActive('processing')">
+          <span class="step-icon">🤖</span>
+          <span class="step-label">IA</span>
+        </div>
+        <div class="step" [class.active]="isStepActive('optimizing')">
+          <span class="step-icon">✨</span>
+          <span class="step-label">Optimización</span>
+        </div>
+        <div class="step" [class.active]="isStepActive('complete')">
+          <span class="step-icon">✅</span>
+          <span class="step-label">Listo</span>
+        </div>
+      </div>
+
+      <!-- Acciones -->
+      <div class="card-actions">
+        <button class="btn-secondary" (click)="goBack()">Cancelar y volver</button>
+        @if (status() === 'complete') {
+          <button class="btn-primary" (click)="goToProjects()">Ver proyecto generado</button>
+        }
+      </div>
+    </div>
+  </main>
+</div>
