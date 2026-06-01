@@ -1,10 +1,10 @@
-import { Component, inject, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Component, HostListener, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AuthService } from '../../core/auth/auth.service';
-import { NavbarComponent } from '../../shared/components/navbar/navbar';
+import { Router } from '@angular/router';
 import { ActionId } from '../../core/models/project.model';
+import { AuthService } from '../../core/services/auth.service';
+import { NavbarComponent } from '../../shared/components/navbar/navbar';
 
 type ActivePanel = ActionId | null;
 
@@ -50,9 +50,9 @@ export class DashboardComponent {
   customEffectPrompt = signal('');
 
   get firstName(): string {
-    const user = this.currentUser() as any;
+    const user = this.currentUser();
     if (!user) return 'Usuario';
-    return user.firstName || user.name?.split(' ')[0] || 'Usuario';
+    return user.name?.split(' ')[0] || 'Usuario';
   }
 
   readonly actionCards: ActionCard[] = [
@@ -130,7 +130,8 @@ export class DashboardComponent {
   }
 
   // Panel: Prompt
-  updatePrompt(value: string): void {
+  updatePrompt(event: Event): void {
+    const value = (event.target as HTMLTextAreaElement).value;
     this.promptText.set(value);
   }
 
@@ -156,7 +157,8 @@ export class DashboardComponent {
     this.selectedEffect.set(id);
   }
 
-  updateCustomEffectPrompt(value: string): void {
+  updateCustomEffectPrompt(event: Event): void {
+    const value = (event.target as HTMLTextAreaElement).value;
     this.customEffectPrompt.set(value);
   }
 
@@ -181,7 +183,7 @@ export class DashboardComponent {
     const effect = this.selectedEffect();
     const prompt = effect === 'custom' ? this.customEffectPrompt() : undefined;
     
-    const queryParams: any = { action: 'effects', effect };
+    const queryParams: { action: string; effect: string; prompt?: string } = { action: 'effects', effect: effect! };
     if (prompt) queryParams.prompt = prompt;
     
     this.router.navigate(['/upload'], { queryParams });

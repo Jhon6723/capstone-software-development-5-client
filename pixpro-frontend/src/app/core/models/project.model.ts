@@ -12,7 +12,7 @@ export interface Project {
     prompt?: string;
     effect?: string;
     resolution?: string;
-    [key: string]: any;
+    [key: string]: string | number | boolean | null | undefined;
   };
 }
 

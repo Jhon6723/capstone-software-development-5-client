@@ -1,23 +1,19 @@
-import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of, delay, map } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { Observable, delay, map, of } from 'rxjs';
+import { environment } from '../../../environments/environment';
 import { Project, ProjectListResponse } from '../models/project.model';
-import { AppConfigService } from '../config/app.config.service';
 
 @Injectable({ providedIn: 'root' })
 export class ProjectsService {
   private http = inject(HttpClient);
-  private configService = inject(AppConfigService);
   
   private get apiUrl(): string {
-    const base = this.configService.get('apiBaseUrl') || 'http://localhost:3000/api';
-    return `${base}/projects`;
+    return `${environment.apiUrl}/projects`;
   }
   
   // Toggle para mocks
   private get useMocks(): boolean {
-    // Opción A: Leer desde config.json (recomendado)
-    // return this.configService.get('useMocks') ?? true;
     return true;
   }
 
@@ -48,7 +44,7 @@ export class ProjectsService {
   }
 
   // Mock data
-  private getMockResponse(params?: any): ProjectListResponse {
+  private getMockResponse(params?: { page?: number; limit?: number; search?: string }): ProjectListResponse {
     const page = params?.page || 1;
     const limit = params?.limit || 12;
     const start = (page - 1) * limit;

@@ -1,15 +1,15 @@
-import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
-import { filter, Subscription } from 'rxjs';
 import {
-  trigger,
-  transition,
-  style,
   animate,
+  group,
   query,
-  group
+  style,
+  transition,
+  trigger
 } from '@angular/animations';
+import { CommonModule } from '@angular/common';
+import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { filter, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-auth-layout',
@@ -66,7 +66,7 @@ export class AuthLayoutComponent implements OnInit, OnDestroy {
     this.updateMode(this.router.url);
     this.routerSub = this.router.events.pipe(
       filter(e => e instanceof NavigationEnd)
-    ).subscribe((e: any) => {
+    ).subscribe((e: NavigationEnd) => {
       this.updateMode(e.urlAfterRedirects);
     });
   }

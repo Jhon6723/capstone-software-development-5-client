@@ -50,7 +50,7 @@
           class="prompt-input"
           placeholder="Ej: un dragón de cristal volando sobre montañas nevadas al amanecer..."
           [value]="promptText()"
-          (input)="updatePrompt($any($event.target).value)"
+          (input)="updatePrompt($event)"
           rows="4"
         ></textarea>
         <div class="prompt-hints">
@@ -103,7 +103,7 @@
               class="prompt-input"
               placeholder="Ej: mezcla de acuarela con neón cyberpunk, bordes difuminados..."
               [value]="customEffectPrompt()"
-              (input)="updateCustomEffectPrompt($any($event.target).value)"
+              (input)="updateCustomEffectPrompt($event)"
               rows="3"
             ></textarea>
             <div class="prompt-hints">

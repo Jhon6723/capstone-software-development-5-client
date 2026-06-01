@@ -1,7 +1,6 @@
-import { Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-processing-page',
@@ -19,10 +18,10 @@ export class ProcessingPageComponent implements OnInit, OnDestroy {
   message = signal('Preparando entorno...');
   isConnected = signal(true);
   imageCount = signal(1);
-  uploadState = new Map<string, any>();
+  uploadState = new Map<string, { fileName: string; progress: number; status: 'pending' | 'uploading' | 'done' | 'error' }>();
 
   // Simulación temporal (eliminar al integrar WebSockets reales)
-  private simTimeout: any;
+  private simTimeout: ReturnType<typeof setTimeout> | undefined;
 
   ngOnInit(): void {
     // TODO: Reemplazar con this.initWebSocket();
@@ -75,7 +74,7 @@ export class ProcessingPageComponent implements OnInit, OnDestroy {
     const runStep = () => {
         if (idx < steps.length) {
         const step = steps[idx];
-        this.status.set(step.status as any);
+        this.status.set(step.status as 'uploading' | 'processing' | 'optimizing' | 'complete');
         this.message.set(step.message);
         this.progress.set(Math.min(100, ((idx + 1) / steps.length) * 100));
         idx++;
