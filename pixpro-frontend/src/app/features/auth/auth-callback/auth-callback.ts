@@ -1,8 +1,8 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService as Auth0Service } from '@auth0/auth0-angular';
-import { AuthService } from '../../../core/auth/auth.service';
-import { filter, take, switchMap } from 'rxjs/operators';
+import { filter, switchMap, take } from 'rxjs/operators';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-auth-callback',
