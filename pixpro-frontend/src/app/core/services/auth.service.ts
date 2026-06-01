@@ -1,30 +1,26 @@
-import { Injectable, signal, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { Injectable, PLATFORM_ID, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, tap } from 'rxjs';
 import { AuthService as Auth0Service } from '@auth0/auth0-angular';
-import { AppConfigService } from '../config/app.config.service';
-import { LoginRequest, LoginResponse, UserResponse, UserProfile } from './auth.models';
+import { Observable, tap } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { LoginRequest, LoginResponse, UserProfile, UserResponse } from '../models/auth.models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
   private readonly auth0 = inject(Auth0Service);
+  private readonly API_URL = environment.apiUrl;
 
   currentUser = signal<UserProfile | null>(null);
 
   constructor(
     private http: HttpClient,
     private router: Router,
-    private config: AppConfigService,
   ) {
     this.loadUserFromStorage();
-  }
-
-  private get API_URL(): string {
-    return this.config.get('apiUrl');
   }
 
   login(credentials: LoginRequest): Observable<LoginResponse> {

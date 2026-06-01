@@ -9,37 +9,147 @@
 
   <main class="dashboard-main">
 
-    <div class="welcome-section">
-      <div class="welcome-badge">
-        <span class="badge-dot"></span>
-        <span>Panel de control</span>
+    <!-- Hero -->
+    <div class="hero-section">
+      <div class="hero-greeting">
+        <span class="greeting-dot"></span>
+        Bienvenido de vuelta, <span class="greeting-name">{{ firstName }}</span>
       </div>
-      <h1 class="welcome-heading">
-        Hola, <span class="user-highlight">{{ firstName }}</span> 👋
-      </h1>
-      <p class="welcome-subtitle">
-        Bienvenido a PixPro. Explora las herramientas de procesamiento
-        de imágenes con IA disponibles para ti.
-      </p>
+      <h1 class="hero-title">Crea imágenes con IA</h1>
+      <p class="hero-sub">Elige qué quieres hacer hoy</p>
     </div>
 
-    <div class="cards-section">
-      <h2 class="section-title">Acceso rápido</h2>
-      <div class="cards-grid">
-        @for (card of quickAccessCards; track card.title) {
-          <div class="quick-card" [class]="card.color">
-            <div class="card-header">
-              <div class="card-icon">{{ card.icon }}</div>
-              <span class="card-tag">{{ card.tag }}</span>
-            </div>
+    <!-- Cards de acción -->
+    <div class="action-cards">
+      @for (card of actionCards; track card.id) {
+        <div
+          class="action-card"
+          [class.active]="isActive(card.id)"
+          (click)="selectCard(card.id)"
+          role="button"
+          tabindex="0"
+          (keydown.enter)="selectCard(card.id)"
+        >
+          <div class="card-gradient" [style.background]="card.gradient">
+            <span class="card-icon" [innerHTML]="getCardIcon(card.id)"></span>
+          </div>
+          <div class="card-body">
             <h3 class="card-title">{{ card.title }}</h3>
             <p class="card-desc">{{ card.description }}</p>
-            <div class="card-footer">
-              <span class="coming-soon">
-                {{ card.route ? 'Ir ahora' : 'Disponible en ' + card.tag }}
-              </span>
-              <a *ngIf="card.route" [routerLink]="card.route" class="arrow-link">→</a>
-              <span *ngIf="!card.route" class="arrow-icon">→</span>
+          </div>
+          <div class="card-glow"></div>
+        </div>
+      }
+    </div>
+
+    <!-- Panel: Prompt -->
+    @if (activePanel() === 'prompt') {
+      <div class="expand-panel">
+        <p class="panel-label">Describe la imagen que quieres generar</p>
+        <textarea
+          class="prompt-input"
+          placeholder="Ej: un dragón de cristal volando sobre montañas nevadas al amanecer..."
+          [value]="promptText()"
+          (input)="updatePrompt($event)"
+          rows="4"
+        ></textarea>
+        <div class="prompt-hints">
+          <span class="hint-tag" (click)="addHint('estilo cinematográfico')">🎬 Cinematográfico</span>
+          <span class="hint-tag" (click)="addHint('iluminación suave')">💡 Iluminación</span>
+          <span class="hint-tag" (click)="addHint('alta resolución')">✨ 4K</span>
+        </div>
+        <div class="panel-actions">
+          <button class="btn-continue" [disabled]="!canContinuePrompt" (click)="continueWithPrompt()">
+            <span class="btn-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+            </span>
+            Continuar a cargar imágenes
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Panel: Efectos -->
+    @if (activePanel() === 'effects') {
+      <div class="expand-panel">
+        <p class="panel-label">Elige el efecto que quieres aplicar</p>
+        
+        <!-- Grid de efectos -->
+        <div class="effects-grid">
+          @for (effect of effects; track effect.id) {
+            <div
+              class="effect-card"
+              [class.selected]="selectedEffect() === effect.id"
+              (click)="selectEffect(effect.id)"
+              role="button"
+              tabindex="0"
+              (keydown.enter)="selectEffect(effect.id)"
+            >
+              <div class="effect-gradient" [style.background]="effect.gradient">
+                <span class="effect-check" [class.visible]="selectedEffect() === effect.id">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
+              </div>
+              <span class="effect-name">{{ effect.name }}</span>
+            </div>
+          }
+        </div>
+
+        <!-- Campo de prompt SOLO si selecciona "Personalizado" -->
+        @if (selectedEffect() === 'custom') {
+          <div class="custom-prompt-section">
+            <p class="panel-label" style="margin-top: 0.5rem;">Describe tu efecto personalizado</p>
+            <textarea
+              class="prompt-input"
+              placeholder="Ej: mezcla de acuarela con neón cyberpunk, bordes difuminados..."
+              [value]="customEffectPrompt()"
+              (input)="updateCustomEffectPrompt($event)"
+              rows="3"
+            ></textarea>
+            <div class="prompt-hints">
+              <span class="hint-tag" (click)="addCustomHint('textura de óleo')">🎨 Óleo</span>
+              <span class="hint-tag" (click)="addCustomHint('estilo acuarela')">💧 Acuarela</span>
+              <span class="hint-tag" (click)="addCustomHint('iluminación dramática')">✨ Dramático</span>
+            </div>
+          </div>
+        }
+
+        <div class="panel-actions">
+          <button class="btn-continue" [disabled]="!canContinueEffect" (click)="continueWithEffect()">
+            <span class="btn-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+            </span>
+            Continuar a cargar imágenes
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Proyectos recientes -->
+    <div class="projects-section">
+      <div class="projects-header">
+        <h2 class="projects-title">Proyectos recientes</h2>
+        <button class="btn-view-all" (click)="viewAllProjects()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          Ver todos
+        </button>
+      </div>
+      <div class="projects-mosaic">
+        @for (project of recentProjects; track project.id) {
+          <div class="project-card" (click)="viewProject(project.id)">
+            <div class="project-mosaic-grid">
+              @for (color of project.colors; track $index) {
+                <div class="mosaic-cell" [style.background]="color === '#000' ? 'rgba(0,0,0,0.6)' : color">
+                  @if (color === '#000' && $index === 3) {
+                    <span class="mosaic-more">+{{ project.imageCount - 3 }}</span>
+                  }
+                </div>
+              }
+            </div>
+            <div class="project-info">
+              <p class="project-name">{{ project.name }}</p>
+              <p class="project-model">{{ project.model }}</p>
+              <p class="project-meta">{{ project.imageCount }} imágenes · {{ project.date }}</p>
             </div>
           </div>
         }

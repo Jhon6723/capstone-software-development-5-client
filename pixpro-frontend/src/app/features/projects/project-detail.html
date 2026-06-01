@@ -1,0 +1,50 @@
+<div class="dashboard-root">
+  <div class="orb orb-2"></div>
+  <div class="noise-overlay"></div>
+  
+  <main class="dashboard-main">
+    <!-- Loading -->
+    @if (loading()) {
+      <div class="loading-detail">
+        <div class="skeleton" style="width: 60%; height: 2rem; margin-bottom: 0.5rem;"></div>
+        <div class="skeleton" style="width: 30%; height: 1rem;"></div>
+        <div class="image-grid">
+          @for (item of [1,2,3,4,5,6]; track item) {
+            <div class="image-placeholder skeleton"></div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Contenido -->
+    @if (!loading() && project()) {
+      <button class="btn-back" (click)="goBack()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m15 18-6-6 6-6"/>
+        </svg>
+        Volver
+      </button>
+      
+      <div class="project-header">
+        <h1 class="hero-title">{{ project()?.name }}</h1>
+        <p class="project-meta">
+          {{ project()?.model }} · {{ project()?.imageCount }} imágenes · {{ formatDate(project()?.date || '') }}
+        </p>
+      </div>
+      
+      <div class="image-grid">
+        @for (img of mockImages; track img) {
+          <div class="image-placeholder" [style.background]="img"></div>
+        }
+      </div>
+    }
+
+    <!-- Error / Not found -->
+    @if (!loading() && !project()) {
+      <div class="empty-state">
+        <p>Proyecto no encontrado</p>
+        <button class="btn-continue" (click)="goBack()">Volver a proyectos</button>
+      </div>
+    }
+  </main>
+</div>

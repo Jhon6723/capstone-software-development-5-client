@@ -40,6 +40,18 @@
     }
   </div>
 
+  <!-- Botón Continuar a procesamiento -->
+  @if (imagePreviews().length > 0 && !globalErrorMessage() && !isProcessing()) {
+    <button class="btn-continue" (click)="goToProcessing()">
+      <span class="btn-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>
+        </svg>
+      </span>
+      Continuar al procesamiento
+    </button>
+  }
+
   @if (globalErrorMessage()) {
     <div class="error-box">
       <span class="error-dot"></span>
@@ -62,10 +74,7 @@
         @for (preview of imagePreviews(); track preview.file.name; let i = $index) {
           <div class="img-card">
             <div class="img-wrapper">
-              <img
-                [src]="preview.previewUrl"
-                [alt]="preview.file.name"
-              />
+              <img [src]="preview.previewUrl" [alt]="preview.file.name" />
               <button class="img-remove" (click)="removeImage(i)" aria-label="Eliminar imagen">✕</button>
             </div>
             <div class="img-info">

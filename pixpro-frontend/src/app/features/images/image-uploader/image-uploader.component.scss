@@ -287,3 +287,43 @@ $transition:     0.2s ease;
   font-size: 0.7rem;
   color: $text-muted;
 }
+
+/* Botón Continuar */
+.btn-continue {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #06b6d4, #14b8a6);
+  border: none;
+  border-radius: 14px;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 14px rgba(6, 182, 212, 0.4);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(6, 182, 212, 0.6);
+    opacity: 0.95;
+  }
+
+  &:active {
+    transform: translateY(0);
+    transition-duration: 0.1s;
+  }
+
+  .btn-icon {
+    display: inline-flex;
+    transition: transform 0.3s ease;
+  }
+
+  &:hover .btn-icon {
+    transform: translateX(3px);
+  }
+}
