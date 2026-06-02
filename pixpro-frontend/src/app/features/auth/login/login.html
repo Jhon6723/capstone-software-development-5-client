@@ -14,9 +14,11 @@
         placeholder="tu@email.com"
         autocomplete="email"
       />
-      <span class="field-error" *ngIf="emailControl.touched && emailControl.invalid">
-        {{ emailError }}
-      </span>
+      @if (emailControl.touched && emailControl.invalid) {
+        <span class="field-error">
+          {{ emailError }}
+        </span>
+      }
     </div>
 
     <div class="glass-field">
@@ -30,9 +32,11 @@
         autocomplete="current-password"
         required
       />
-      <span class="field-error" *ngIf="passwordControl.touched && passwordControl.invalid">
-        {{ passwordError }}
-      </span>
+      @if (passwordControl.touched && passwordControl.invalid) {
+        <span class="field-error">
+          {{ passwordError }}
+        </span>
+      }
     </div>
 
     <button
@@ -41,7 +45,9 @@
       [disabled]="loginForm.invalid || isLoading()"
       aria-label="Iniciar sesión"
     >
-      <span class="spinner" *ngIf="isLoading()"></span>
+      @if (isLoading()) {
+        <span class="spinner"></span>
+      }
       <span>{{ isLoading() ? 'Verificando...' : 'Iniciar sesión' }}</span>
     </button>
   </form>
