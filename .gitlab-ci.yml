@@ -6,6 +6,7 @@ stages:
 
 variables:
   REGISTRY: registry.gitlab.com/jala-university1/cohort-3/es.co.cssd-352.ga.t1.26.m2/sa/syntaxerror2/pix-pro/client/client
+  NOTIFICATIONS_WS_URL: wss://localhost:8443/api/websocket/connect
 
 # STAGE: build (Install dependencies and compile Angular)
 build:angular:
@@ -24,6 +25,7 @@ build:angular:
       export const environment = {
         production: true,
         apiUrl: '${API_URL}',
+        notificationsWsUrl: '${NOTIFICATIONS_WS_URL}',
         auth0: {
           domain: '${AUTH0_DOMAIN}',
           clientId: '${AUTH0_CLIENT_ID}',
@@ -37,6 +39,7 @@ build:angular:
       export const environment = {
         production: false,
         apiUrl: '${API_URL}',
+        notificationsWsUrl: '${NOTIFICATIONS_WS_URL}',
         auth0: {
           domain: '${AUTH0_DOMAIN}',
           clientId: '${AUTH0_CLIENT_ID}',
@@ -69,6 +72,7 @@ test:unit:
       export const environment = {
         production: false,
         apiUrl: '${API_URL}',
+        notificationsWsUrl: '${NOTIFICATIONS_WS_URL}',
         auth0: {
           domain: '${AUTH0_DOMAIN}',
           clientId: '${AUTH0_CLIENT_ID}',
@@ -91,6 +95,7 @@ docker:build-push:
   script:
     - docker build
         --build-arg API_URL=$API_URL
+      --build-arg NOTIFICATIONS_WS_URL=$NOTIFICATIONS_WS_URL
         --build-arg AUTH0_DOMAIN=$AUTH0_DOMAIN
         --build-arg AUTH0_CLIENT_ID=$AUTH0_CLIENT_ID
         --build-arg AUTH0_AUDIENCE=$AUTH0_AUDIENCE

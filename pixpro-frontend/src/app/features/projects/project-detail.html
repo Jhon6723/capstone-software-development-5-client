@@ -31,12 +31,49 @@
           {{ project()?.model }} · {{ project()?.imageCount }} imágenes · {{ formatDate(project()?.date || '') }}
         </p>
       </div>
-      
-      <div class="image-grid">
-        @for (img of mockImages; track img) {
-          <div class="image-placeholder" [style.background]="img"></div>
+
+      @if (images().length > 0) {
+        <div class="image-grid">
+          @for (image of images(); track image.id) {
+            <div
+              class="image-placeholder image-card"
+              [class.selected]="isImageSelected(image.id)"
+              (click)="selectImage(image)"
+            >
+              <img [src]="image.secureUrl" [alt]="image.fileName" class="project-image" />
+              <div class="image-meta">
+                <span>{{ image.width }}×{{ image.height }}</span>
+                <span>{{ formatSize(image.sizeInBytes) }}</span>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Vista previa ampliada -->
+        @if (selectedImage()) {
+          <div class="preview-section">
+            <div class="preview-header">
+              <h3>Vista previa</h3>
+              <button class="btn-close" (click)="selectImage(null)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <div class="preview-content">
+              <img [src]="selectedImage()!.secureUrl" [alt]="selectedImage()!.fileName" class="preview-image" />
+              <div class="preview-actions">
+                <button class="btn-continue" (click)="downloadImage(selectedImage()!)">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                  Descargar esta imagen
+                </button>
+              </div>
+            </div>
+          </div>
         }
-      </div>
+      } @else {
+        <div class="empty-state">
+          <p>Este proyecto aún no tiene imágenes procesadas.</p>
+        </div>
+      }
     }
 
     <!-- Error / Not found -->

@@ -1,6 +1,9 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+import { ProjectImage } from '../../../core/models/project.model';
+import { ProjectsService } from '../../../core/services/projects.service';
 import { NavbarComponent } from '../../../shared/components/navbar/navbar';
 
 export interface GeneratedImage {
@@ -9,7 +12,7 @@ export interface GeneratedImage {
   thumbnail: string;
   width: number;
   height: number;
-  format: 'png' | 'jpg';
+  format: string;
   size: number;
   prompt?: string;
   effect?: string;
@@ -39,6 +42,7 @@ export interface ProjectResult {
 export class ProjectResultComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private projectsService = inject(ProjectsService);
 
   // Estado reactivo
   project = signal<ProjectResult | null>(null);
@@ -46,52 +50,7 @@ export class ProjectResultComponent implements OnInit {
   selectedImage = signal<GeneratedImage | null>(null);
   isDownloading = signal(false);
 
-  // Mock data (reemplazar con llamada al backend)
-  private readonly mockProject: ProjectResult = {
-    id: 'proj_' + Date.now(),
-    name: 'Proyecto generado',
-    model: 'PixPro AI v2.1',
-    createdAt: new Date().toISOString(),
-    action: 'effects',
-    images: [
-      {
-        id: 'img_1',
-        url: 'https://picsum.photos/seed/result1/1024/1024',
-        thumbnail: 'https://picsum.photos/seed/result1/400/400',
-        width: 1024, height: 1024, format: 'png', size: 2.4,
-        effect: 'ghibli'
-      },
-      {
-        id: 'img_2',
-        url: 'https://picsum.photos/seed/result2/1024/1024',
-        thumbnail: 'https://picsum.photos/seed/result2/400/400',
-        width: 1024, height: 1024, format: 'png', size: 2.1,
-        effect: 'ghibli'
-      },
-      {
-        id: 'img_3',
-        url: 'https://picsum.photos/seed/result3/1024/1024',
-        thumbnail: 'https://picsum.photos/seed/result3/400/400',
-        width: 1024, height: 1024, format: 'png', size: 2.8,
-        effect: 'ghibli'
-      },
-      {
-        id: 'img_4',
-        url: 'https://picsum.photos/seed/result4/1024/1024',
-        thumbnail: 'https://picsum.photos/seed/result4/400/400',
-        width: 1024, height: 1024, format: 'png', size: 2.3,
-        effect: 'ghibli'
-      }
-    ],
-    metadata: {
-      effect: 'ghibli',
-      prompt: 'Paisaje mágico estilo Studio Ghibli',
-      processingTime: 8.4
-    }
-  };
-
   ngOnInit(): void {
-    // Leer parámetros de ruta (projectId o contexto del processing)
     const projectId = this.route.snapshot.paramMap.get('id');
     this.loadProject(projectId || 'mock');
   }
@@ -100,15 +59,42 @@ export class ProjectResultComponent implements OnInit {
     this.loading.set(true);
     
     try {
-      // MODO MOCK: Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // En producción: reemplazar con llamada real
-      // const data = await this.projectsService.getResult(id).toPromise();
-      
-      this.project.set(this.mockProject);
+      const [project, imageResponse] = await Promise.all([
+        firstValueFrom(this.projectsService.getById(id)),
+        firstValueFrom(this.projectsService.getProjectImages(id, { page: 1, limit: 100 })),
+      ]);
+
+      if (!project) {
+        this.project.set(null);
+        return;
+      }
+
+      const actionParam = this.route.snapshot.queryParamMap.get('action');
+      const action = actionParam === 'upload' || actionParam === 'prompt' || actionParam === 'effects'
+        ? actionParam
+        : 'effects';
+      const prompt = this.route.snapshot.queryParamMap.get('prompt')?.trim() || undefined;
+      const effect = this.route.snapshot.queryParamMap.get('effect')?.trim() || undefined;
+
+      const processedImages = imageResponse.data.filter(image => image.status.toLowerCase() === 'processed');
+      const visibleImages = (processedImages.length > 0 ? processedImages : imageResponse.data)
+        .map(image => this.mapGeneratedImage(image, effect));
+
+      this.project.set({
+        id: project.id,
+        name: project.name,
+        model: project.model,
+        createdAt: project.createdAt || project.date,
+        action,
+        images: visibleImages,
+        metadata: {
+          prompt,
+          effect,
+        },
+      });
     } catch (error) {
       console.error('Error loading project result:', error);
+      this.project.set(null);
     } finally {
       this.loading.set(false);
     }
@@ -135,19 +121,11 @@ export class ProjectResultComponent implements OnInit {
     this.isDownloading.set(true);
     
     try {
-      // MODO MOCK: Simular descarga
-      await new Promise(resolve => setTimeout(resolve, 1200));
-      
-      // En producción: fetch real del blob
-      // const response = await fetch(image.url);
-      // const blob = await response.blob();
-      // triggerDownload(blob, `pixpro-${image.id}.${image.format}`);
-      
-      // Feedback visual
-      alert(`✅ Imagen descargada: ${image.id}`);
+      const response = await fetch(image.url);
+      const blob = await response.blob();
+      this.triggerDownload(blob, `pixpro-${image.id}.${image.format || 'png'}`);
     } catch (error) {
       console.error('Download error:', error);
-      alert('❌ Error al descargar. Intenta de nuevo.');
     } finally {
       this.isDownloading.set(false);
     }
@@ -157,8 +135,12 @@ export class ProjectResultComponent implements OnInit {
     this.isDownloading.set(true);
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      alert(`✅ ${this.project()?.images.length} imágenes descargadas como ZIP`);
+      const images = this.project()?.images ?? [];
+      for (const image of images) {
+        const response = await fetch(image.url);
+        const blob = await response.blob();
+        this.triggerDownload(blob, `pixpro-${image.id}.${image.format || 'png'}`);
+      }
     } finally {
       this.isDownloading.set(false);
     }
@@ -213,5 +195,27 @@ export class ProjectResultComponent implements OnInit {
 
   isImageSelected(imageId: string): boolean {
     return this.selectedImage()?.id === imageId;
+  }
+
+  private mapGeneratedImage(image: ProjectImage, effect?: string): GeneratedImage {
+    return {
+      id: image.id,
+      url: image.secureUrl,
+      thumbnail: image.secureUrl,
+      width: image.width,
+      height: image.height,
+      format: image.format,
+      size: image.sizeInBytes / (1024 * 1024),
+      effect,
+    };
+  }
+
+  private triggerDownload(blob: Blob, fileName: string): void {
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = objectUrl;
+    anchor.download = fileName;
+    anchor.click();
+    URL.revokeObjectURL(objectUrl);
   }
 }
