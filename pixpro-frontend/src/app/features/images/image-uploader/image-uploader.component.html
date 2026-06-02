@@ -1,54 +1,95 @@
-<input
-  type="file"
-  #fileInput
-  multiple
-  accept="image/jpeg,image/png"
-  (change)="onFilesSelected($event)"
-  style="display: none"
-/>
+@if (showImageUploadSection) {
+  <input
+    type="file"
+    #fileInput
+    accept="image/jpeg,image/png,image/webp"
+    (change)="onFilesSelected($event)"
+    style="display: none"
+  />
+}
 
 <div class="uploader-card">
 
   <!-- Header -->
   <div class="card-header">
     <div>
-      <h2 class="card-title">Subir imágenes</h2>
-      <p class="card-subtitle">JPG, PNG · Máx. 5MB por archivo · Hasta 4 imágenes</p>
+      <h2 class="card-title">{{ title }}</h2>
+      <p class="card-subtitle">{{ subtitle }}</p>
     </div>
     <span class="card-badge">PixPro</span>
   </div>
 
-  <!-- Drop zone -->
-  <div class="drop-zone" (click)="fileInput.click()">
-    <div class="drop-icon">↑</div>
-    <p class="drop-title">Arrastra tus imágenes aquí</p>
-    <p class="drop-sub">o <span class="drop-link">selecciona desde tu dispositivo</span></p>
+  <div class="project-meta-box">
+    <p class="meta-title">Datos del proyecto</p>
+
+    <label class="meta-label" for="project-title">Título</label>
+    <input
+      id="project-title"
+      class="meta-input"
+      type="text"
+      maxlength="120"
+      [value]="projectTitle()"
+      (input)="updateProjectTitle($event)"
+      placeholder="Ej: Escenas urbanas nocturnas"
+    />
+
+    <label class="meta-label" for="project-description">Descripción (opcional)</label>
+    <textarea
+      id="project-description"
+      class="meta-textarea"
+      rows="3"
+      maxlength="300"
+      [value]="projectDescription()"
+      (input)="updateProjectDescription($event)"
+      placeholder="Describe el objetivo o estilo que buscas"
+    ></textarea>
+
+    <label class="meta-label" for="model-select">Modelo IA</label>
+    <select
+      id="model-select"
+      class="meta-input"
+      [value]="selectedModel()"
+      (change)="updateModel($event)"
+    >
+      @for (model of availableModels; track model.value) {
+        <option [value]="model.value">{{ model.label }}</option>
+      }
+    </select>
   </div>
 
-  <!-- Actions -->
-  <div class="actions-row">
-    <button class="btn-primary" (click)="fileInput.click()">
-      <span>↑</span>
-      <span>Seleccionar imágenes</span>
-    </button>
+  @if (showImageUploadSection) {
+    <!-- Drop zone -->
+    <div class="drop-zone" (click)="openFilePicker()">
+      <div class="drop-icon">↑</div>
+      <p class="drop-title">Arrastra tu imagen aquí</p>
+      <p class="drop-sub">o <span class="drop-link">selecciona desde tu dispositivo</span></p>
+    </div>
 
-    @if (imagePreviews().length > 0) {
-      <button class="btn-ghost" (click)="clearAllImages()">
-        <span>✕</span>
-        <span>Limpiar todas ({{ imagePreviews().length }})</span>
+    <!-- Actions -->
+    <div class="actions-row">
+      <button class="btn-primary" (click)="openFilePicker()">
+        <span>↑</span>
+        <span>Seleccionar imagen</span>
       </button>
-    }
-  </div>
+
+      @if (imagePreviews().length > 0) {
+        <button class="btn-ghost" (click)="clearAllImages()">
+          <span>✕</span>
+          <span>Limpiar imagen</span>
+        </button>
+      }
+    </div>
+  }
 
   <!-- Botón Continuar a procesamiento -->
-  @if (imagePreviews().length > 0 && !globalErrorMessage() && !isProcessing()) {
+  @if (canContinue) {
     <button class="btn-continue" (click)="goToProcessing()">
       <span class="btn-icon">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>
         </svg>
       </span>
-      Continuar al procesamiento
+      {{ continueLabel }}
     </button>
   }
 
@@ -67,7 +108,7 @@
     </div>
   }
 
-  @if (imagePreviews().length > 0) {
+  @if (showImageUploadSection && imagePreviews().length > 0) {
     <div class="previews-section">
       <p class="section-label">Vista previa · {{ imagePreviews().length }} imagen{{ imagePreviews().length > 1 ? 'es' : '' }}</p>
       <div class="previews-grid">

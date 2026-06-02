@@ -48,6 +48,61 @@ $transition:     0.2s ease;
   padding: 4px 12px;
 }
 
+.project-meta-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.9rem;
+  border-radius: 12px;
+  border: 0.5px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.meta-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 0.2rem;
+}
+
+.meta-label {
+  font-size: 0.72rem;
+  color: $text-muted;
+}
+
+.meta-input,
+.meta-textarea {
+  width: 100%;
+  border: 0.5px solid rgba(255, 255, 255, 0.15);
+  background: rgba(7, 10, 24, 0.5);
+  color: $text-primary;
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  font-family: inherit;
+  font-size: 0.85rem;
+  transition: border-color $transition, box-shadow $transition;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.32);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: rgba(129, 140, 248, 0.65);
+    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.14);
+  }
+}
+
+.meta-input option {
+  color: #0b1020;
+}
+
+.meta-textarea {
+  resize: vertical;
+  min-height: 82px;
+}
+
 .drop-zone {
   border: 1.5px dashed rgba(255, 255, 255, 0.14);
   border-radius: 14px;

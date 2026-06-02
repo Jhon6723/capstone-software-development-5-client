@@ -1,0 +1,16 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        API_URL: ${API_URL:-http://localhost:8080/api}
+        NOTIFICATIONS_WS_URL: ${NOTIFICATIONS_WS_URL:-wss://localhost:8443/api/websocket/connect}
+        AUTH0_DOMAIN: ${AUTH0_DOMAIN:-}
+        AUTH0_CLIENT_ID: ${AUTH0_CLIENT_ID:-}
+        AUTH0_AUDIENCE: ${AUTH0_AUDIENCE:-}
+        AUTH0_REDIRECT_URI: ${AUTH0_REDIRECT_URI:-http://localhost:4200/auth/callback}
+    image: pixpro-frontend:local
+    ports:
+      - "80:80"
+    restart: unless-stopped

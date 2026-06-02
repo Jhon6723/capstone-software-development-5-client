@@ -1,8 +1,9 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+import { Project, ProjectImage } from '../../core/models/project.model';
 import { ProjectsService } from '../../core/services/projects.service';
-import { Project } from '../../core/models/project.model';
 
 @Component({
   selector: 'app-project-detail',
@@ -17,16 +18,9 @@ export class ProjectDetailComponent implements OnInit {
   private projectsService = inject(ProjectsService);
 
   project = signal<Project | null>(null);
+  images = signal<ProjectImage[]>([]);
   loading = signal(true);
-
-  readonly mockImages = [
-    'linear-gradient(135deg, #6366f1, #a855f7)',
-    'linear-gradient(135deg, #06b6d4, #3b82f6)',
-    'linear-gradient(135deg, #f43f5e, #f59e0b)',
-    'linear-gradient(135deg, #10b981, #059669)',
-    'linear-gradient(135deg, #8b5cf6, #ec4899)',
-    'linear-gradient(135deg, #1e293b, #475569)'
-  ];
+  selectedImage = signal<ProjectImage | null>(null);
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -37,12 +31,20 @@ export class ProjectDetailComponent implements OnInit {
 
   async loadProject(id: string): Promise<void> {
     this.loading.set(true);
+    this.selectedImage.set(null);
     try {
-      const data = await this.projectsService.getById(id).toPromise();
-      this.project.set(data ?? null);
+      const project = await firstValueFrom(this.projectsService.getById(id));
+      this.project.set(project ?? null);
+
+      if (project) {
+        const imagesResponse = await firstValueFrom(this.projectsService.getProjectImages(id, { page: 1, limit: 100 }));
+        const processedImages = imagesResponse.data.filter(image => image.status.toLowerCase() === 'processed');
+        this.images.set(processedImages.length > 0 ? processedImages : imagesResponse.data);
+      }
     } catch (error) {
       console.error('Error loading project:', error);
       this.project.set(null);
+      this.images.set([]);
     } finally {
       this.loading.set(false);
     }
@@ -61,5 +63,38 @@ export class ProjectDetailComponent implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/projects']);
+  }
+
+  formatSize(bytes: number): string {
+    const megaBytes = bytes / (1024 * 1024);
+    return `${megaBytes.toFixed(1)} MB`;
+  }
+
+  selectImage(image: ProjectImage | null): void {
+    this.selectedImage.set(image);
+  }
+
+  isImageSelected(imageId: string): boolean {
+    return this.selectedImage()?.id === imageId;
+  }
+
+  async downloadImage(image: ProjectImage): Promise<void> {
+    try {
+      const response = await fetch(image.secureUrl);
+      const blob = await response.blob();
+      const extension = image.format || 'png';
+      this.triggerDownload(blob, `pixpro-${image.id}.${extension}`);
+    } catch (error) {
+      console.error('Download error:', error);
+    }
+  }
+
+  private triggerDownload(blob: Blob, fileName: string): void {
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = objectUrl;
+    anchor.download = fileName;
+    anchor.click();
+    URL.revokeObjectURL(objectUrl);
   }
 }

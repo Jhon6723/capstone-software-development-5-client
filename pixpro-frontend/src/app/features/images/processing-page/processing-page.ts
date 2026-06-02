@@ -1,6 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { firstValueFrom, Subscription } from 'rxjs';
+import { ProjectsService } from '../../../core/services/projects.service';
+import { UploadContext, UploadStateService } from '../../../core/services/upload-state.service';
+import { WsProcessingEvent, WsProcessingService } from '../../../core/services/ws-processing.service';
 
 @Component({
   selector: 'app-processing-page',
@@ -11,6 +15,9 @@ import { Router } from '@angular/router';
 })
 export class ProcessingPageComponent implements OnInit, OnDestroy {
   private router = inject(Router);
+  private projectsService = inject(ProjectsService);
+  private uploadStateService = inject(UploadStateService);
+  private wsProcessingService = inject(WsProcessingService);
 
   // Estado reactivo
   status = signal<'uploading' | 'processing' | 'optimizing' | 'complete' | 'error'>('uploading');
@@ -19,18 +26,31 @@ export class ProcessingPageComponent implements OnInit, OnDestroy {
   isConnected = signal(true);
   imageCount = signal(1);
   uploadState = new Map<string, { fileName: string; progress: number; status: 'pending' | 'uploading' | 'done' | 'error' }>();
+  currentProjectId = signal<string | null>(null);
 
-  // Simulación temporal (eliminar al integrar WebSockets reales)
   private simTimeout: ReturnType<typeof setTimeout> | undefined;
+  private wsSubscription: Subscription | undefined;
+  private readonly maxPollAttempts = 40;
+  private readonly debugEnabled = true;
 
   ngOnInit(): void {
-    // TODO: Reemplazar con this.initWebSocket();
-    this.startSimulation();
+    const context = this.uploadStateService.getContext();
+
+    if (!context) {
+      this.status.set('error');
+      this.isConnected.set(false);
+      this.message.set('No hay una solicitud de procesamiento activa.');
+      return;
+    }
+
+    this.imageCount.set(Math.max(context.images.length, context.expectedResultCount ?? 1));
+    void this.startProcessing(context);
   }
 
   ngOnDestroy(): void {
     if (this.simTimeout) clearTimeout(this.simTimeout);
-    // TODO: this.wsService?.disconnect();
+    this.wsSubscription?.unsubscribe();
+    this.wsProcessingService.disconnect();
   }
 
   // Lógica de estados
@@ -58,61 +78,177 @@ export class ProcessingPageComponent implements OnInit, OnDestroy {
   }
 
   goToProjects(): void {
+    const projectId = this.currentProjectId();
+    if (projectId) {
+      this.router.navigate(['/project-result', projectId]);
+      return;
+    }
+
     this.router.navigate(['/projects']);
   }
 
-  private startSimulation(): void {
-    const count = this.imageCount() || 1;
-    const steps = [
-        { status: 'uploading', message: `Subiendo ${count} imagen(es)...`, duration: 1200 },
-        { status: 'processing', message: 'Analizando con modelo de IA...', duration: 2500 },
-        { status: 'optimizing', message: 'Aplicando efectos y ajustes...', duration: 1800 },
-        { status: 'complete', message: '¡Generación completada!', duration: 1000 }
-    ];
+  private async startProcessing(context: UploadContext): Promise<void> {
+    try {
+      this.status.set('uploading');
+      this.progress.set(10);
+      this.message.set('Creando proyecto...');
 
-    let idx = 0;
-    const runStep = () => {
-        if (idx < steps.length) {
-        const step = steps[idx];
-        this.status.set(step.status as 'uploading' | 'processing' | 'optimizing' | 'complete');
-        this.message.set(step.message);
-        this.progress.set(Math.min(100, ((idx + 1) / steps.length) * 100));
-        idx++;
-        this.simTimeout = setTimeout(runStep, step.duration);
-        } else {
-        this.uploadState.clear(); // Limpiar mock state
-        
-        // Generar ID temporal para el proyecto (en backend real vendría de la respuesta)
-        const projectId = 'proj_' + Date.now();
-        
-        setTimeout(() => {
-            this.router.navigate(['/project-result', projectId]);
-        }, 1200);
-        }
-    };
-    runStep();
- }
+      const project = await firstValueFrom(this.projectsService.createProject({
+        name: context.projectName || this.buildFallbackProjectName(context),
+        description: context.projectDescription,
+      }));
 
-  // Placeholder para WebSockets reales
-  /*
-  private initWebSocket(): void {
-    const wsUrl = `ws://backend.com/ws/projects/${projectId}`;
-    this.wsService.connect(wsUrl).pipe(
-      finalize(() => this.isConnected.set(false))
-    ).subscribe({
-      next: (data) => {
-        this.status.set(data.status);
-        this.progress.set(data.progress);
-        this.message.set(data.message);
-        if (data.status === 'complete') {
-          setTimeout(() => this.router.navigate(['/project', data.projectId]), 1000);
-        }
-      },
-      error: (err) => {
-        this.status.set('error');
-        this.message.set('No se pudo conectar con el servidor. Reintentando...');
+      this.currentProjectId.set(project.id);
+      this.progress.set(20);
+      this.message.set('Enviando solicitud al backend...');
+
+      const filesToUpload = context.images.length > 0 ? context.images : [undefined];
+
+      for (const [index, file] of filesToUpload.entries()) {
+        await firstValueFrom(this.projectsService.uploadImage(project.id, {
+          file,
+          prompt: context.prompt ?? '',
+          feature: context.feature,
+          parameters: context.parameters,
+        }));
+
+        const uploadProgress = Math.round(((index + 1) / filesToUpload.length) * 40);
+        this.progress.set(20 + uploadProgress);
+        this.message.set(`Solicitud ${index + 1} de ${filesToUpload.length} enviada.`);
       }
+
+      this.status.set('processing');
+      this.progress.set(65);
+      this.message.set('Esperando resultados del procesamiento...');
+
+      await this.waitForProcessedImages(project.id, context);
+
+      this.status.set('complete');
+      this.progress.set(100);
+      this.message.set('¡Generación completada!');
+
+      this.simTimeout = setTimeout(() => {
+        this.router.navigate(['/project-result', project.id], {
+          queryParams: {
+            action: context.action,
+            prompt: context.prompt,
+            effect: context.effect,
+          },
+        });
+      }, 1200);
+    } catch (error) {
+      console.error('Processing error:', error);
+      this.status.set('error');
+      this.isConnected.set(false);
+      this.message.set('No se pudo completar el procesamiento. Revisa tu sesión o vuelve a intentar.');
+    }
+  }
+
+  private async waitForProcessedImages(projectId: string, context: UploadContext): Promise<void> {
+    const expectedResults = Math.max(
+      context.expectedResultCount ?? context.parameters?.quantity ?? (context.images.length || 1),
+      1,
+    );
+
+    await new Promise<void>((resolve, reject) => {
+      const timeoutMs = this.maxPollAttempts * 3000;
+      const completedImageIds = new Set<string>();
+      this.debug('waiting websocket events', { projectId, expectedResults, timeoutMs });
+
+      const timeoutId = setTimeout(() => {
+        this.debug('websocket wait timeout reached', { projectId, expectedResults, received: completedImageIds.size });
+        this.wsSubscription?.unsubscribe();
+        this.wsSubscription = undefined;
+        this.wsProcessingService.disconnect();
+        reject(new Error('Timed out waiting for processed images via WebSocket.'));
+      }, timeoutMs);
+
+      this.wsSubscription = this.wsProcessingService.connect().subscribe({
+        next: event => {
+          this.debug('event received', event);
+
+          if (event.type === 'pong' || event.type === 'unknown') {
+            this.debug('event ignored by type', { type: event.type });
+            return;
+          }
+
+          if (event.projectId && event.projectId !== projectId) {
+            this.debug('event ignored by projectId mismatch', { expected: projectId, actual: event.projectId });
+            return;
+          }
+
+          if (event.type === 'IMAGE_PROCESSING_FAILED') {
+            this.debug('processing failed event', event);
+            clearTimeout(timeoutId);
+            this.wsSubscription?.unsubscribe();
+            this.wsSubscription = undefined;
+            this.wsProcessingService.disconnect();
+            reject(new Error(event.errorMessage ?? 'Image processing failed.'));
+            return;
+          }
+
+          if (event.type === 'IMAGE_PROCESSING_COMPLETED') {
+            this.applyProcessingProgress(event, completedImageIds);
+            this.debug('progress updated', { completed: completedImageIds.size, expectedResults });
+
+            if (completedImageIds.size >= expectedResults) {
+              this.debug('processing completed by websocket events', { completed: completedImageIds.size, expectedResults });
+              clearTimeout(timeoutId);
+              this.wsSubscription?.unsubscribe();
+              this.wsSubscription = undefined;
+              this.wsProcessingService.disconnect();
+              resolve();
+            }
+          }
+        },
+        error: err => {
+          this.debug('websocket subscription error', err);
+          clearTimeout(timeoutId);
+          this.wsSubscription = undefined;
+          this.wsProcessingService.disconnect();
+          reject(err);
+        },
+      });
     });
   }
-  */
+
+  private applyProcessingProgress(event: WsProcessingEvent, completedImageIds: Set<string>): void {
+    if (event.imageId) {
+      completedImageIds.add(event.imageId);
+    }
+
+    this.status.set('optimizing');
+    const progressBoost = Math.min(30, completedImageIds.size * 10);
+    this.progress.set(70 + progressBoost);
+    this.message.set(`Recibiendo ${completedImageIds.size} resultado(s) del backend...`);
+  }
+
+  private buildFallbackProjectName(context: UploadContext): string {
+    if (context.projectName) {
+      return context.projectName;
+    }
+
+    if (context.action === 'prompt') {
+      return 'Proyecto generado desde prompt';
+    }
+
+    if (context.action === 'effects') {
+      return `Efecto ${context.effect ?? 'artístico'}`;
+    }
+
+    return 'Mejora de imagen';
+  }
+
+  private debug(message: string, payload?: unknown): void {
+    if (!this.debugEnabled) {
+      return;
+    }
+
+    if (payload === undefined) {
+      console.debug('[ProcessingPage]', message);
+      return;
+    }
+
+    console.debug('[ProcessingPage]', message, payload);
+  }
 }

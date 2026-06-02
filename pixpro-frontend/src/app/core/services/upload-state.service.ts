@@ -1,10 +1,18 @@
 import { Injectable, signal } from '@angular/core';
+import { ActionId } from '../models/project.model';
+import { ProcessingFeature, ProcessingParameters } from '../models/upload-image.request';
 
 export interface UploadContext {
   images: File[];
-  action?: 'upload' | 'prompt' | 'effects';
+  action?: ActionId;
   prompt?: string;
   effect?: string;
+  feature?: ProcessingFeature;
+  parameters?: ProcessingParameters;
+  projectId?: string;
+  projectName?: string;
+  projectDescription?: string;
+  expectedResultCount?: number;
   timestamp: number;
 }
 

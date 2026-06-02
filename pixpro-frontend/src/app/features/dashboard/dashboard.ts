@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ActionId } from '../../core/models/project.model';
+import { ActionId, Project } from '../../core/models/project.model';
 import { AuthService } from '../../core/services/auth.service';
+import { ProjectsService } from '../../core/services/projects.service';
 import { NavbarComponent } from '../../shared/components/navbar/navbar';
 
 type ActivePanel = ActionId | null;
@@ -22,15 +23,6 @@ interface Effect {
   gradient: string;
 }
 
-interface Project {
-  id: string;
-  name: string;
-  model: string;
-  imageCount: number;
-  date: string;
-  colors: string[];
-}
-
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -38,9 +30,10 @@ interface Project {
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
 
   private authService = inject(AuthService);
+  private projectsService = inject(ProjectsService);
   private router = inject(Router);
 
   currentUser = this.authService.currentUser;
@@ -86,11 +79,11 @@ export class DashboardComponent {
     { id: 'custom',    name: 'Personalizado',  gradient: 'linear-gradient(135deg, #d97706, #f59e0b)' }
   ];
 
-  readonly recentProjects: Project[] = [
-    { id: '1', name: 'Paisajes Ghibli', model: 'Ghibli v2.1', imageCount: 12, date: 'Hace 2 días', colors: ['#059669','#34d399','#10b981','#000'] },
-    { id: '2', name: 'Retratos Anime', model: 'Anime XL', imageCount: 8, date: 'Hace 5 días', colors: ['#db2777','#c026d3','#a855f7','#000'] },
-    { id: '3', name: 'Ciudad Cyberpunk', model: 'CyberDiffusion', imageCount: 6, date: 'Hace 1 semana', colors: ['#2563eb','#0891b2','#7c3aed','#000'] }
-  ];
+  recentProjects: Project[] = [];
+
+  ngOnInit(): void {
+    this.loadRecentProjects();
+  }
 
   // Iconos SVG
   getCardIcon(id: ActionId): string {
@@ -196,6 +189,47 @@ export class DashboardComponent {
 
   viewProject(id: string): void {
     this.router.navigate(['/project', id]);
+  }
+
+  private async loadRecentProjects(): Promise<void> {
+    try {
+      const response = await this.projectsService.getList({ page: 1, limit: 12 }).toPromise();
+      if (!response) {
+        this.recentProjects = [];
+        return;
+      }
+
+      this.recentProjects = response.data
+        .sort((a, b) => {
+          const aDate = new Date(a.createdAt ?? a.date).getTime();
+          const bDate = new Date(b.createdAt ?? b.date).getTime();
+          return bDate - aDate;
+        })
+        .slice(0, 3)
+        .map(project => ({
+          ...project,
+          date: this.formatRelativeDate(project.createdAt ?? project.date)
+        }));
+    } catch (error) {
+      console.error('Error loading recent projects:', error);
+      this.recentProjects = [];
+    }
+  }
+
+  private formatRelativeDate(dateString: string): string {
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return 'Fecha no disponible';
+    }
+
+    const now = new Date();
+    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (diffDays <= 0) return 'Hoy';
+    if (diffDays === 1) return 'Ayer';
+    if (diffDays < 7) return `Hace ${diffDays} días`;
+    return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
   }
 
   // Efecto glow siguiendo el mouse
