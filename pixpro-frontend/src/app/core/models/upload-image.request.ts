@@ -33,7 +33,16 @@ export function createUploadFormData(request: UploadImageRequest): FormData {
   }
 
   if (request.parameters) {
-    formData.append('parameters', JSON.stringify(request.parameters));
+    const p = request.parameters;
+    const backendParams: Record<string, unknown> = {};
+    if (p.width !== undefined)            backendParams['Width'] = p.width;
+    if (p.height !== undefined)           backendParams['Height'] = p.height;
+    if (p.numInferenceSteps !== undefined) backendParams['NumInferenceSteps'] = p.numInferenceSteps;
+    if (p.strength !== undefined)         backendParams['Strength'] = p.strength;
+    if (p.guidanceScale !== undefined)    backendParams['GuidanceScale'] = p.guidanceScale;
+    if (p.quantity !== undefined)         backendParams['Quantity'] = p.quantity;
+    if (p.model !== undefined)            backendParams['Model'] = p.model;
+    formData.append('parameters', JSON.stringify(backendParams));
   }
 
   return formData;
