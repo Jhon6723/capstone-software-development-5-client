@@ -1,0 +1,297 @@
+$text-primary: rgba(255, 255, 255, 0.95);
+$text-secondary: rgba(255, 255, 255, 0.55);
+$text-muted: rgba(255, 255, 255, 0.35);
+$transition: 0.25s ease;
+
+.form-pane {
+  padding: 1.75rem 2rem 1.5rem;
+
+  @media (max-width: 900px) {
+    padding: 1.5rem 1.75rem;
+  }
+
+  @media (max-width: 480px) {
+    padding: 1.25rem 1.25rem;
+  }
+}
+
+.form-eyebrow {
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: $text-muted;
+  margin-bottom: 0.4rem;
+}
+
+.form-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: $text-primary;
+  margin-bottom: 0.3rem;
+  letter-spacing: -0.3px;
+}
+
+.form-subtitle {
+  font-size: 0.78rem;
+  color: $text-secondary;
+  line-height: 1.6;
+  margin-bottom: 1.25rem;
+}
+
+.name-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.glass-field {
+  margin-bottom: 0.75rem;
+
+  label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.55);
+    margin-bottom: 0.3rem;
+  }
+}
+
+.glass-input {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 0.5px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  padding: 0 14px;
+  font-size: 0.82rem;
+  color: $text-primary;
+  outline: none;
+  transition: all $transition;
+  font-family: inherit;
+
+  &::placeholder {
+    color: $text-muted;
+  }
+
+  &:focus {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
+  }
+
+  &:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px rgba(13, 27, 42, 0.95) inset;
+    -webkit-text-fill-color: white;
+  }
+}
+
+.field-error {
+  display: block;
+  font-size: 0.68rem;
+  color: #f87171;
+  margin-top: 0.25rem;
+  padding-left: 2px;
+}
+
+.strength-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -0.25rem 0 0.5rem;
+}
+
+.strength-bars {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+.str-bar {
+  height: 3px;
+  flex: 1;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  transition: background 0.3s ease;
+
+  &.weak.active {
+    background: #f87171;
+  }
+  &.medium.active {
+    background: #fb923c;
+  }
+  &.strong.active {
+    background: #34d399;
+  }
+}
+
+.strength-label {
+  font-size: 0.68rem;
+  min-width: 36px;
+  color: $text-muted;
+  &.weak {
+    color: #f87171;
+  }
+  &.medium {
+    color: #fb923c;
+  }
+  &.strong {
+    color: #34d399;
+  }
+}
+
+.glass-btn {
+  width: 100%;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: white;
+  margin-top: 0.5rem;
+  transition: all $transition;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+
+  &:hover:not(:disabled) {
+    opacity: 0.88;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+.btn-register {
+  background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%);
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.form-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 1rem 0;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 0.5px;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  span {
+    font-size: 0.68rem;
+    color: $text-muted;
+  }
+}
+
+.form-switch {
+  text-align: center;
+  font-size: 0.75rem;
+  color: $text-secondary;
+
+  a {
+    font-weight: 500;
+    color: #67e8f9;
+    margin-left: 4px;
+    text-decoration: none;
+    transition: color $transition;
+    &:hover {
+      color: #a5f3fc;
+    }
+  }
+}
+
+// ── Social login buttons ───────────────────────────────────────────────────
+
+.social-btn {
+  width: 100%;
+  height: 42px;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: $text-primary;
+  margin-top: 0.5rem;
+  transition: all $transition;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+  border: 0.5px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+
+  img {
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.btn-google:hover {
+  background: rgba(8, 145, 178, 0.18);
+}
+.btn-microsoft:hover {
+  background: rgba(6, 182, 212, 0.18);
+}
+
+.separator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 1rem 0 0.5rem;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 0.5px;
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.separator-text {
+  font-size: 0.68rem;
+  color: $text-muted;
+  white-space: nowrap;
+  text-transform: lowercase;
+}

@@ -1,0 +1,66 @@
+<div class="form-pane">
+  <div class="form-eyebrow">Acceso</div>
+  <h1 class="form-title">Iniciar sesión</h1>
+  <p class="form-subtitle">Ingresa tus credenciales para continuar en PixPro.</p>
+
+  <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+    <div class="glass-field">
+      <label for="login-email">Correo electrónico</label>
+      <input
+        id="login-email"
+        class="glass-input"
+        type="email"
+        formControlName="email"
+        placeholder="tu@email.com"
+        autocomplete="email"
+      />
+      @if (emailControl.touched && emailControl.invalid) {
+        <span class="field-error">
+          {{ emailError }}
+        </span>
+      }
+    </div>
+
+    <div class="glass-field">
+      <label for="login-password">Contraseña</label>
+      <input
+        id="login-password"
+        class="glass-input"
+        type="password"
+        formControlName="password"
+        placeholder="••••••••"
+        autocomplete="current-password"
+        required
+      />
+      @if (passwordControl.touched && passwordControl.invalid) {
+        <span class="field-error">
+          {{ passwordError }}
+        </span>
+      }
+    </div>
+
+    <button
+      type="submit"
+      class="glass-btn btn-login"
+      [disabled]="loginForm.invalid || isLoading()"
+      aria-label="Iniciar sesión"
+    >
+      @if (isLoading()) {
+        <span class="spinner"></span>
+      }
+      <span>{{ isLoading() ? 'Verificando...' : 'Iniciar sesión' }}</span>
+    </button>
+  </form>
+
+  <div class="form-divider"><span>o inicia sesión con</span></div>
+
+  <button type="button" class="social-btn google-btn" (click)="loginWithGoogle()">
+    <img src="assets/icons/google.svg" alt="Google" width="20" />
+    Continuar con Google
+  </button>
+  <div class="form-divider"><span>-</span></div>
+  <div class="form-switch">
+    ¿No tienes cuenta?
+    <a routerLink="/register">Regístrate gratis</a>
+  </div>
+</div>

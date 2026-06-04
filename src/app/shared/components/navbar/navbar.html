@@ -1,0 +1,28 @@
+<nav class="navbar">
+  <a class="nav-brand" routerLink="/dashboard">
+    <div class="logo-mark"><span>✦</span></div>
+    <span class="logo-text">PixPro</span>
+  </a>
+
+  <div class="nav-links">
+    <a class="nav-link" routerLink="/dashboard" routerLinkActive="active">
+      Home
+    </a>
+    <a class="nav-link" routerLink="/projects" routerLinkActive="active">
+      Proyectos
+    </a>
+  </div>
+
+  <div class="nav-actions">
+    @if (currentUser(); as user) {
+      <div class="nav-user">
+        <div class="user-avatar">{{ userInitial }}</div>
+        <span class="user-name">{{ user.name }}</span>
+      </div>
+    }
+    <button class="logout-btn" (click)="logout()" aria-label="Cerrar sesión">
+      <span class="logout-icon">⏻</span>
+      <span class="logout-label">Cerrar sesión</span>
+    </button>
+  </div>
+</nav>
