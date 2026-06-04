@@ -1,0 +1,32 @@
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
+/* Reset global */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+
+  // It visually hides the scrollbar but keeps it functional.
+  scrollbar-width: none;          // Firefox
+  -ms-overflow-style: none;       // IE / Edge
+
+  &::-webkit-scrollbar {
+    display: none;                // Chrome / Safari
+  }
+}
+
+body {
+  background: #0f0c29;
+}
+
+input, button {
+  font-family: inherit;
+}

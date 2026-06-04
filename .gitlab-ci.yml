@@ -1,0 +1,128 @@
+stages:
+  - build
+  - test
+  - docker
+  - deploy
+
+variables:
+  REGISTRY: registry.gitlab.com/jala-university1/cohort-3/es.co.cssd-352.ga.t1.26.m2/sa/syntaxerror2/pix-pro/client/client
+  NOTIFICATIONS_WS_URL: wss://localhost:8443/api/websocket/connect
+
+# STAGE: build (Install dependencies and compile Angular)
+build:angular:
+  stage: build
+  image: node:22-alpine
+  cache:
+    key: npm-$CI_COMMIT_REF_SLUG
+    paths:
+      - node_modules/
+  script:
+    - npm ci
+    - mkdir -p src/environments
+    - |
+      cat > src/environments/environment.production.ts << EOF
+      export const environment = {
+        production: true,
+        apiUrl: '${API_URL}',
+        notificationsWsUrl: '${NOTIFICATIONS_WS_URL}',
+        auth0: {
+          domain: '${AUTH0_DOMAIN}',
+          clientId: '${AUTH0_CLIENT_ID}',
+          audience: '${AUTH0_AUDIENCE}',
+          redirectUri: '${AUTH0_REDIRECT_URI}'
+        }
+      };
+      EOF
+    - |
+      cat > src/environments/environment.ts << EOF
+      export const environment = {
+        production: false,
+        apiUrl: '${API_URL}',
+        notificationsWsUrl: '${NOTIFICATIONS_WS_URL}',
+        auth0: {
+          domain: '${AUTH0_DOMAIN}',
+          clientId: '${AUTH0_CLIENT_ID}',
+          audience: '${AUTH0_AUDIENCE}',
+          redirectUri: '${AUTH0_REDIRECT_URI}'
+        }
+      };
+      EOF
+    - npm run build -- --configuration production
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 hour
+
+# STAGE: test (unit testing)
+test:unit:
+  stage: test
+  image: node:22-alpine
+  allow_failure: true
+  cache:
+    key: npm-$CI_COMMIT_REF_SLUG
+    paths:
+      - node_modules/
+  script:
+    - npm ci
+    - mkdir -p src/environments
+    - |
+      cat > src/environments/environment.ts << EOF
+      export const environment = {
+        production: false,
+        apiUrl: '${API_URL}',
+        notificationsWsUrl: '${NOTIFICATIONS_WS_URL}',
+        auth0: {
+          domain: '${AUTH0_DOMAIN}',
+          clientId: '${AUTH0_CLIENT_ID}',
+          audience: '${AUTH0_AUDIENCE}',
+          redirectUri: '${AUTH0_REDIRECT_URI}'
+        }
+      };
+      EOF
+    - npm run test -- --watch=false
+
+docker:build-push:
+  stage: docker
+  image: docker:27
+  services:
+    - docker:27-dind
+  dependencies:
+    - build:angular
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build
+        --build-arg API_URL=$API_URL
+      --build-arg NOTIFICATIONS_WS_URL=$NOTIFICATIONS_WS_URL
+        --build-arg AUTH0_DOMAIN=$AUTH0_DOMAIN
+        --build-arg AUTH0_CLIENT_ID=$AUTH0_CLIENT_ID
+        --build-arg AUTH0_AUDIENCE=$AUTH0_AUDIENCE
+        --build-arg AUTH0_REDIRECT_URI=$AUTH0_REDIRECT_URI
+        -t $REGISTRY:$CI_COMMIT_SHA
+        -t $REGISTRY:latest
+        .
+    - docker push $REGISTRY:$CI_COMMIT_SHA
+    - docker push $REGISTRY:latest
+
+# STAGE: deploy (It only runs when there's a push to main. It connects to the Manager via SSH and updates the frontend service in the Swarm cluster.)
+deploy:swarm:
+  stage: deploy
+  image: alpine:3.19
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+  before_script:
+    - apk add --no-cache openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$SWARM_MANAGER_SSH_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - ssh-keyscan $SWARM_MANAGER_IP >> ~/.ssh/known_hosts
+  script:
+    - ssh deploy@$SWARM_MANAGER_IP "
+        docker service update
+          --image $REGISTRY:$CI_COMMIT_SHA
+          --update-parallelism 1
+          --update-delay 10s
+          --update-failure-action rollback
+          --update-order start-first
+          pixpro_frontend
+      "

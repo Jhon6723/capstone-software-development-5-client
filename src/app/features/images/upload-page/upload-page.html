@@ -1,0 +1,28 @@
+<div class="upload-root">
+
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+  <div class="noise-overlay"></div>
+
+  <app-navbar></app-navbar>
+
+  <main class="upload-main">
+
+    <div class="page-header">
+      <div class="page-badge">
+        <span class="badge-dot"></span>
+        <span>Gestión de imágenes</span>
+      </div>
+      <h1 class="page-title">{{ title }}</h1>
+      <p class="page-subtitle">{{ subtitle }}</p>
+    </div>
+
+    <!-- Reusable ImageUploaderComponent -->
+    <app-image-uploader
+      (imagesSelected)="onImagesSelected($event)"
+    ></app-image-uploader>
+
+  </main>
+
+</div>

@@ -1,0 +1,120 @@
+<div class="form-pane">
+  <div class="form-eyebrow">Registro</div>
+  <h1 class="form-title">Crear cuenta</h1>
+  <p class="form-subtitle">Únete a PixPro y empieza a transformar tus imágenes con IA.</p>
+
+  <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate>
+    <div class="name-row">
+      <div class="glass-field">
+        <label for="reg-firstname">Nombre</label>
+        <input
+          id="reg-firstname"
+          class="glass-input"
+          type="text"
+          formControlName="firstName"
+          placeholder="Juan"
+          autocomplete="given-name"
+        />
+        @if (firstName.touched && firstName.invalid) {
+          <span class="field-error">{{ firstNameError }}</span>
+        }
+      </div>
+      <div class="glass-field">
+        <label for="reg-lastname">Apellido</label>
+        <input
+          id="reg-lastname"
+          class="glass-input"
+          type="text"
+          formControlName="lastName"
+          placeholder="Pérez"
+          autocomplete="family-name"
+        />
+        @if (lastName.touched && lastName.invalid) {
+          <span class="field-error">{{ lastNameError }}</span>
+        }
+      </div>
+    </div>
+
+    <!-- Email -->
+    <div class="glass-field">
+      <label for="reg-email">Correo electrónico</label>
+      <input
+        id="reg-email"
+        class="glass-input"
+        type="email"
+        formControlName="email"
+        placeholder="tu@email.com"
+        autocomplete="email"
+      />
+      @if (email.touched && email.invalid) {
+        <span class="field-error">{{ emailError }}</span>
+      }
+    </div>
+
+    <!-- Password -->
+    <div class="glass-field">
+      <label for="reg-password">Contraseña</label>
+      <input
+        id="reg-password"
+        class="glass-input"
+        type="password"
+        formControlName="password"
+        placeholder="••••••••"
+        autocomplete="new-password"
+        required
+      />
+      @if (password.touched && password.invalid) {
+        <span class="field-error">{{ passwordError }}</span>
+      }
+    </div>
+
+    @if (password.value) {
+    <div class="strength-wrap">
+      <div class="strength-bars">
+        <div class="str-bar" [class]="strength >= 1 ? strengthClass : ''" [class.active]="strength >= 1"></div>
+        <div class="str-bar" [class]="strength >= 2 ? strengthClass : ''" [class.active]="strength >= 2"></div>
+        <div class="str-bar" [class]="strength >= 3 ? strengthClass : ''" [class.active]="strength >= 3"></div>
+      </div>
+      <span class="strength-label" [class]="strengthClass">{{ strengthLabel }}</span>
+    </div>
+    }
+
+    <div class="glass-field">
+      <label for="reg-confirm">Confirmar contraseña</label>
+      <input
+        id="reg-confirm"
+        class="glass-input"
+        type="password"
+        formControlName="confirmPassword"
+        placeholder="••••••••"
+        autocomplete="new-password"
+        required
+      />
+      @if (confirmPassword.touched && confirmPassword.invalid) {
+        <span class="field-error">{{ confirmError }}</span>
+      }
+    </div>
+
+    <button
+      type="submit"
+      class="glass-btn btn-register"
+      [disabled]="registerForm.invalid || isLoading()"
+      aria-label="Crear cuenta"
+    >
+      @if (isLoading()) { <span class="spinner"></span> }
+      <span>{{ isLoading() ? 'Creando cuenta...' : 'Crear cuenta' }}</span>
+    </button>
+  </form>
+
+  <div class="form-divider"><span>o registrate con</span></div>
+
+  <button type="button" class="social-btn google-btn" (click)="loginWithGoogle()">
+    <img src="assets/icons/google.svg" alt="Google" width="20" />
+    Registrarse con Google
+  </button>
+  <div class="form-divider"><span>-</span></div>
+  <div class="form-switch">
+    ¿Ya tienes cuenta?
+    <a routerLink="/login">Inicia sesión aquí</a>
+  </div>
+</div>

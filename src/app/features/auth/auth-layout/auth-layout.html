@@ -1,0 +1,82 @@
+<div class="auth-root" [class.register-mode]="isRegisterMode()">
+
+  <!-- Animated background orbs -->
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+  <div class="orb orb-4"></div>
+  <div class="noise-overlay"></div>
+
+  <!-- Left brand panel -->
+  <div class="brand-panel">
+    <div class="brand-inner">
+
+      <div class="logo-row">
+        <div class="logo-mark"><span class="logo-icon">✦</span></div>
+        <span class="logo-text">PixPro</span>
+      </div>
+
+      <div class="brand-badge">
+        <span class="badge-dot"></span>
+        @if (!isRegisterMode()) { <span>Sesión activa y segura</span> }
+        @if (isRegisterMode()) { <span>Plataforma de IA para imágenes</span> }
+      </div>
+
+      <!-- Login mode content -->
+      <div class="brand-content" [class.visible]="!isRegisterMode()" [class.hidden]="isRegisterMode()">
+        <h2 class="brand-heading">Bienvenido<br>de vuelta</h2>
+        <p class="brand-desc">
+          Tus proyectos te están esperando. Continúa donde lo dejaste
+          y descubre los nuevos modelos de IA disponibles.
+        </p>
+        <div class="feat-list">
+          <div class="feat-item">
+            <div class="feat-icon">⚡</div>
+            <span>¿Por qué no probar el nuevo filtro de estilos artísticos?</span>
+          </div>
+          <div class="feat-item">
+            <div class="feat-icon">◷</div>
+            <span>Tienes proyectos en progreso listos para continuar</span>
+          </div>
+          <div class="feat-item">
+            <div class="feat-icon">✦</div>
+            <span>Nuevos modelos de IA disponibles desde tu último acceso</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Register mode content -->
+      <div class="brand-content" [class.visible]="isRegisterMode()" [class.hidden]="!isRegisterMode()">
+        <h2 class="brand-heading">Transforma tus<br>imágenes con IA</h2>
+        <p class="brand-desc">
+          PixPro usa modelos de inteligencia artificial para detectar objetos,
+          aplicar estilos artísticos y mejorar tu contenido visual en segundos.
+          Sin experiencia técnica requerida.
+        </p>
+        <div class="feat-list">
+          <div class="feat-item">
+            <div class="feat-icon">◎</div>
+            <span>Detección automática de objetos y escenas</span>
+          </div>
+          <div class="feat-item">
+            <div class="feat-icon">✦</div>
+            <span>Filtros artísticos generados con IA en segundos</span>
+          </div>
+          <div class="feat-item">
+            <div class="feat-icon">↑</div>
+            <span>Almacenamiento seguro en CDN con acceso rápido</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="outlet-wrapper" [@slideAnimation]="getRouteState(outlet)">
+      <router-outlet #outlet="outlet"></router-outlet>
+    </div>
+  </div>
+
+</div>
