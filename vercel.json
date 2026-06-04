@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm ci && mkdir -p src/environments && echo \"export const environment = { production: true, apiUrl: '${API_URL}', notificationsWsUrl: '${NOTIFICATIONS_WS_URL}', auth0: { domain: '${AUTH0_DOMAIN}', clientId: '${AUTH0_CLIENT_ID}', audience: '${AUTH0_AUDIENCE}', redirectUri: '${AUTH0_REDIRECT_URI}' } };\" > src/environments/environment.production.ts && echo \"export const environment = { production: false, apiUrl: '${API_URL}', notificationsWsUrl: '${NOTIFICATIONS_WS_URL}', auth0: { domain: '${AUTH0_DOMAIN}', clientId: '${AUTH0_CLIENT_ID}', audience: '${AUTH0_AUDIENCE}', redirectUri: '${AUTH0_REDIRECT_URI}' } };\" > src/environments/environment.ts && npm run build -- --configuration production",
+  "buildCommand": "npm ci && npm run vercel-build",
   "outputDirectory": "dist/pixpro-frontend/browser",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
