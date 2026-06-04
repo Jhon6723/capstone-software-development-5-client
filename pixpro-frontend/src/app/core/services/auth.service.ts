@@ -39,12 +39,6 @@ export class AuthService {
     });
   }
 
-  loginWithMicrosoft(): void {
-    this.auth0.loginWithRedirect({
-      authorizationParams: { connection: 'windowslive' },
-    });
-  }
-
   handleAuth0Success(token: string, user: UserProfile): void {
     if (this.isBrowser) {
       document.cookie = `access_token=${token}; path=/; SameSite=Strict`;

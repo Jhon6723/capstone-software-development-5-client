@@ -18,8 +18,8 @@
 
       <div class="brand-badge">
         <span class="badge-dot"></span>
-        <span *ngIf="!isRegisterMode()">Sesión activa y segura</span>
-        <span *ngIf="isRegisterMode()">Plataforma de IA para imágenes</span>
+        @if (!isRegisterMode()) { <span>Sesión activa y segura</span> }
+        @if (isRegisterMode()) { <span>Plataforma de IA para imágenes</span> }
       </div>
 
       <!-- Login mode content -->

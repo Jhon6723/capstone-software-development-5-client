@@ -15,9 +15,9 @@
           placeholder="Juan"
           autocomplete="given-name"
         />
-        <span class="field-error" *ngIf="firstName.touched && firstName.invalid">
-          {{ firstNameError }}
-        </span>
+        @if (firstName.touched && firstName.invalid) {
+          <span class="field-error">{{ firstNameError }}</span>
+        }
       </div>
       <div class="glass-field">
         <label for="reg-lastname">Apellido</label>
@@ -29,9 +29,9 @@
           placeholder="Pérez"
           autocomplete="family-name"
         />
-        <span class="field-error" *ngIf="lastName.touched && lastName.invalid">
-          {{ lastNameError }}
-        </span>
+        @if (lastName.touched && lastName.invalid) {
+          <span class="field-error">{{ lastNameError }}</span>
+        }
       </div>
     </div>
 
@@ -46,9 +46,9 @@
         placeholder="tu@email.com"
         autocomplete="email"
       />
-      <span class="field-error" *ngIf="email.touched && email.invalid">
-        {{ emailError }}
-      </span>
+      @if (email.touched && email.invalid) {
+        <span class="field-error">{{ emailError }}</span>
+      }
     </div>
 
     <!-- Password -->
@@ -63,12 +63,13 @@
         autocomplete="new-password"
         required
       />
-      <span class="field-error" *ngIf="password.touched && password.invalid">
-        {{ passwordError }}
-      </span>
+      @if (password.touched && password.invalid) {
+        <span class="field-error">{{ passwordError }}</span>
+      }
     </div>
 
-    <div class="strength-wrap" *ngIf="password.value">
+    @if (password.value) {
+    <div class="strength-wrap">
       <div class="strength-bars">
         <div class="str-bar" [class]="strength >= 1 ? strengthClass : ''" [class.active]="strength >= 1"></div>
         <div class="str-bar" [class]="strength >= 2 ? strengthClass : ''" [class.active]="strength >= 2"></div>
@@ -76,6 +77,7 @@
       </div>
       <span class="strength-label" [class]="strengthClass">{{ strengthLabel }}</span>
     </div>
+    }
 
     <div class="glass-field">
       <label for="reg-confirm">Confirmar contraseña</label>
@@ -88,9 +90,9 @@
         autocomplete="new-password"
         required
       />
-      <span class="field-error" *ngIf="confirmPassword.touched && confirmPassword.invalid">
-        {{ confirmError }}
-      </span>
+      @if (confirmPassword.touched && confirmPassword.invalid) {
+        <span class="field-error">{{ confirmError }}</span>
+      }
     </div>
 
     <button
@@ -99,7 +101,7 @@
       [disabled]="registerForm.invalid || isLoading()"
       aria-label="Crear cuenta"
     >
-      <span class="spinner" *ngIf="isLoading()"></span>
+      @if (isLoading()) { <span class="spinner"></span> }
       <span>{{ isLoading() ? 'Creando cuenta...' : 'Crear cuenta' }}</span>
     </button>
   </form>
@@ -110,14 +112,7 @@
     <img src="assets/icons/google.svg" alt="Google" width="20" />
     Registrarse con Google
   </button>
-
-  <button type="button" class="social-btn microsoft-btn" (click)="loginWithMicrosoft()">
-    <img src="assets/icons/microsoft.svg" alt="Microsoft" width="20" />
-    Registrarse con Microsoft
-  </button>
-
-  <div class="form-divider"><span>o</span></div>
-
+  <div class="form-divider"><span>-</span></div>
   <div class="form-switch">
     ¿Ya tienes cuenta?
     <a routerLink="/login">Inicia sesión aquí</a>

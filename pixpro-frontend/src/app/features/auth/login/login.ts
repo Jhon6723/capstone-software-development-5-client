@@ -63,8 +63,4 @@ export class LoginComponent {
   loginWithGoogle(): void {
     this.authService.loginWithGoogle();
   }
-
-  loginWithMicrosoft(): void {
-    this.authService.loginWithMicrosoft();
-  }
 }

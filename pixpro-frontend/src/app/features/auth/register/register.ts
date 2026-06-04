@@ -145,8 +145,4 @@ export class RegisterComponent {
   loginWithGoogle(): void {
     this.authService.loginWithGoogle();
   }
-
-  loginWithMicrosoft(): void {
-    this.authService.loginWithMicrosoft();
-  }
 }
