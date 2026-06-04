@@ -6,9 +6,9 @@ ARG AUTH0_DOMAIN=
 ARG AUTH0_CLIENT_ID=
 ARG AUTH0_AUDIENCE=
 ARG AUTH0_REDIRECT_URI=
-COPY pixpro-frontend/package*.json ./
+COPY package*.json ./
 RUN npm ci
-COPY pixpro-frontend/ .
+COPY . .
 RUN mkdir -p src/environments && \
     echo "export const environment = { production: true, apiUrl: '${API_URL}', notificationsWsUrl: '${NOTIFICATIONS_WS_URL}', auth0: { domain: '${AUTH0_DOMAIN}', clientId: '${AUTH0_CLIENT_ID}', audience: '${AUTH0_AUDIENCE}', redirectUri: '${AUTH0_REDIRECT_URI}' } };" \
     > src/environments/environment.production.ts && \

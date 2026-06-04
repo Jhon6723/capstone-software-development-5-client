@@ -15,9 +15,8 @@ build:angular:
   cache:
     key: npm-$CI_COMMIT_REF_SLUG
     paths:
-      - pixpro-frontend/node_modules/
+      - node_modules/
   script:
-    - cd pixpro-frontend
     - npm ci
     - mkdir -p src/environments
     - |
@@ -51,7 +50,7 @@ build:angular:
     - npm run build -- --configuration production
   artifacts:
     paths:
-      - pixpro-frontend/dist/
+      - dist/
     expire_in: 1 hour
 
 # STAGE: test (unit testing)
@@ -62,9 +61,8 @@ test:unit:
   cache:
     key: npm-$CI_COMMIT_REF_SLUG
     paths:
-      - pixpro-frontend/node_modules/
+      - node_modules/
   script:
-    - cd pixpro-frontend
     - npm ci
     - mkdir -p src/environments
     - |
