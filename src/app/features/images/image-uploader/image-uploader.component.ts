@@ -1,7 +1,9 @@
-import { Component, ElementRef, EventEmitter, inject, Output, signal, ViewChild } from '@angular/core';
+import { Component, ElementRef, EventEmitter, inject, OnInit, Output, signal, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ActionId } from '../../../core/models/project.model';
 import { ProcessingFeature, ProcessingParameters } from '../../../core/models/upload-image.request';
+import { CREDIT_INFO, MODEL_TIER_MAP } from '../../../core/models/user-credits.model';
+import { CreditsService } from '../../../core/services/credits.service';
 import { UploadStateService } from '../../../core/services/upload-state.service';
 
 interface ImagePreview {
@@ -21,13 +23,14 @@ interface ModelOption {
   templateUrl: './image-uploader.component.html',
   styleUrl: './image-uploader.component.scss',
 })
-export class ImageUploaderComponent {
+export class ImageUploaderComponent implements OnInit {
   @Output() imagesSelected = new EventEmitter<File[]>();
   @ViewChild('fileInput') private fileInput?: ElementRef<HTMLInputElement>;
 
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private uploadState = inject(UploadStateService);
+  private creditsService = inject(CreditsService);
 
   imagePreviews = signal<ImagePreview[]>([]);
   globalErrorMessage = signal<string | null>(null);
@@ -46,6 +49,9 @@ export class ImageUploaderComponent {
     this.projectTitle.set(this.buildDefaultProjectName());
     this.projectDescription.set(this.buildDefaultProjectDescription());
     this.selectedModel.set(this.resolveDefaultModel());
+
+    // Load user credits
+    this.creditsService.loadCredits().subscribe();
   }
 
   get title(): string {
@@ -96,14 +102,38 @@ export class ImageUploaderComponent {
 
   get availableModels(): ModelOption[] {
     if (this.currentAction === 'prompt') {
-      return [{ value: 'flux-schnell', label: 'Flux Schnell (text-to-image)' }];
+      return [{ value: 'flux-schnell', label: 'Flux Schnell (text-to-image) - Ilimitado' }];
     }
 
+    const credits = this.creditsService.credits();
+    const isAdmin = this.creditsService.isAdmin();
+
     return [
-      { value: 'gpt-image-1-mini-low', label: 'GPT Image Mini Low (rápido y económico)' },
-      { value: 'gpt-image-1-mini-high', label: 'GPT Image Mini High (máxima calidad)' },
-      { value: 'kontext', label: 'Kontext (estilo artístico)' },
+      {
+        value: 'gpt-image-1-mini-low',
+        label: this.getModelLabel('gpt-image-1-mini-low', 'GPT Image Mini Low', credits, isAdmin),
+      },
+      {
+        value: 'gpt-image-1-mini-high',
+        label: this.getModelLabel('gpt-image-1-mini-high', 'GPT Image Mini High', credits, isAdmin),
+      },
+      { value: 'kontext', label: this.getModelLabel('kontext', 'Kontext', credits, isAdmin) },
     ];
+  }
+
+  private getModelLabel(model: string, name: string, credits: any[], isAdmin: boolean): string {
+    if (isAdmin) return `${name} (Admin - Ilimitado)`;
+
+    const creditInfo = CREDIT_INFO.find(c => c.modelTier === MODEL_TIER_MAP[model]);
+    if (!creditInfo) return name;
+
+    if (creditInfo.freeTierCredits === 'unlimited') return `${name} (Ilimitado)`;
+
+    const userCredit = credits.find(c => c.modelTier === creditInfo.modelTier);
+    const remaining = userCredit?.creditsRemaining ?? 0;
+    const total = creditInfo.freeTierCredits as number;
+
+    return `${name} (${remaining}/${total} créditos)`;
   }
 
   openFilePicker(): void {
@@ -127,6 +157,18 @@ export class ImageUploaderComponent {
   goToProcessing(): void {
     const config = this.buildProcessingConfig();
     if (!config) return;
+
+    // Check credits before proceeding
+    const model = config.parameters.model || 'gpt-image-1-mini-low';
+    if (!this.creditsService.canUseModel(model)) {
+      const creditInfo = this.creditsService.getCreditInfo(model);
+      const remaining = this.creditsService.getRemainingCredits(model);
+      this.globalErrorMessage.set(
+        `Créditos insuficientes para ${creditInfo?.displayName || model}. ` +
+          `Tienes ${remaining === 'unlimited' ? '∞' : remaining} créditos restantes.`,
+      );
+      return;
+    }
 
     const previews = this.imagePreviews();
     const files = previews.map(p => p.file);
@@ -257,7 +299,13 @@ export class ImageUploaderComponent {
     this.selectedModel.set(value);
   }
 
-  private buildProcessingConfig(): { prompt: string; feature: ProcessingFeature; parameters: ProcessingParameters; projectName: string; projectDescription?: string } | null {
+  private buildProcessingConfig(): {
+    prompt: string;
+    feature: ProcessingFeature;
+    parameters: ProcessingParameters;
+    projectName: string;
+    projectDescription?: string;
+  } | null {
     const prompt = this.resolvePrompt();
     const customTitle = this.projectTitle().trim();
     const customDescription = this.projectDescription().trim();
@@ -305,9 +353,12 @@ export class ImageUploaderComponent {
 
       const effect = this.effectFromRoute;
       const prompts: Record<string, string> = {
-        ghibli: 'Transform this image into a Studio Ghibli-inspired illustration while preserving the scene composition.',
-        anime: 'Transform this image into a polished anime-style illustration with expressive colors and clean outlines.',
-        cyberpunk: 'Transform this image into a cinematic cyberpunk scene with neon lights, futuristic details, and night atmosphere.',
+        ghibli:
+          'Transform this image into a Studio Ghibli-inspired illustration while preserving the scene composition.',
+        anime:
+          'Transform this image into a polished anime-style illustration with expressive colors and clean outlines.',
+        cyberpunk:
+          'Transform this image into a cinematic cyberpunk scene with neon lights, futuristic details, and night atmosphere.',
         custom: 'Apply the requested artistic transformation while preserving the subject of the original image.',
       };
 
