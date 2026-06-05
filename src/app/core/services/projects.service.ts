@@ -1,6 +1,6 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, catchError, map, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   BackendProjectListResponse,
@@ -12,10 +12,12 @@ import {
   ProjectListResponse,
 } from '../models/project.model';
 import { UploadImageRequest, createUploadFormData } from '../models/upload-image.request';
+import { CreditsService } from './credits.service';
 
 @Injectable({ providedIn: 'root' })
 export class ProjectsService {
   private http = inject(HttpClient);
+  private creditsService = inject(CreditsService);
   private readonly projectPalettes: string[][] = [
     ['#0f766e', '#14b8a6', '#5eead4', '#042f2e'],
     ['#7c3aed', '#a855f7', '#ec4899', '#3b0764'],
@@ -24,7 +26,7 @@ export class ProjectsService {
     ['#16a34a', '#84cc16', '#22c55e', '#14532d'],
     ['#334155', '#64748b', '#0f172a', '#1e293b'],
   ];
-  
+
   private get apiUrl(): string {
     return `${environment.apiUrl}/projects`;
   }
@@ -42,21 +44,19 @@ export class ProjectsService {
     return this.http.get<BackendProjectListResponse>(this.apiUrl, { params: httpParams }).pipe(
       map(response => ({
         ...response,
-        data: response.data.map(project => this.mapProject(project))
-      }))
+        data: response.data.map(project => this.mapProject(project)),
+      })),
     );
   }
 
   getById(id: string): Observable<Project | null> {
-    return this.http.get<BackendProjectResponse>(`${this.apiUrl}/${id}`).pipe(
-      map(project => (project ? this.mapProject(project) : null))
-    );
+    return this.http
+      .get<BackendProjectResponse>(`${this.apiUrl}/${id}`)
+      .pipe(map(project => (project ? this.mapProject(project) : null)));
   }
 
   createProject(request: CreateProjectRequest): Observable<Project> {
-    return this.http.post<BackendProjectResponse>(this.apiUrl, request).pipe(
-      map(project => this.mapProject(project))
-    );
+    return this.http.post<BackendProjectResponse>(this.apiUrl, request).pipe(map(project => this.mapProject(project)));
   }
 
   getProjectImages(projectId: string, params?: { page?: number; limit?: number }): Observable<ImageListResponse> {
@@ -71,7 +71,23 @@ export class ProjectsService {
     const formData = createUploadFormData(request);
     formData.append('projectId', projectId);
 
-    return this.http.post<ImageUploadResponse>(`${this.imagesApiUrl}/upload`, formData);
+    const model = request.parameters?.model || 'gpt-image-1-mini-low';
+
+    return this.http.post<ImageUploadResponse>(`${this.imagesApiUrl}/upload`, formData).pipe(
+      tap(() => {
+        // Optimistic credit decrement
+        this.creditsService.decrementCredit(model);
+      }),
+      catchError((error: HttpErrorResponse) => {
+        // Check for insufficient credits error
+        const creditError = this.creditsService.isInsufficientCreditsError(error);
+        if (creditError) {
+          // Reload credits to get accurate state
+          this.creditsService.loadCredits().subscribe();
+        }
+        return throwError(() => error);
+      }),
+    );
   }
 
   private mapProject(project: BackendProjectResponse): Project {
