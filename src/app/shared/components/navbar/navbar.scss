@@ -1,7 +1,7 @@
-$text-primary:   rgba(255, 255, 255, 0.92);
+$text-primary: rgba(255, 255, 255, 0.92);
 $text-secondary: rgba(255, 255, 255, 0.55);
-$glass-border:   rgba(255, 255, 255, 0.12);
-$transition:     0.2s ease;
+$glass-border: rgba(255, 255, 255, 0.12);
+$transition: 0.2s ease;
 
 .navbar {
   position: fixed;
@@ -33,7 +33,8 @@ $transition:     0.2s ease;
 }
 
 .logo-mark {
-  width: 34px; height: 34px;
+  width: 34px;
+  height: 34px;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.08);
   border: 0.5px solid rgba(255, 255, 255, 0.15);
@@ -57,7 +58,9 @@ $transition:     0.2s ease;
   flex: 1;
   justify-content: center;
 
-  @media (max-width: 600px) { display: none; }
+  @media (max-width: 600px) {
+    display: none;
+  }
 }
 
 .nav-link {
@@ -91,11 +94,14 @@ $transition:     0.2s ease;
   align-items: center;
   gap: 0.6rem;
 
-  @media (max-width: 480px) { display: none; }
+  @media (max-width: 480px) {
+    display: none;
+  }
 }
 
 .user-avatar {
-  width: 30px; height: 30px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: linear-gradient(135deg, #6366f1, #8b5cf6);
   display: flex;
@@ -132,10 +138,72 @@ $transition:     0.2s ease;
     border-color: rgba(255, 255, 255, 0.2);
   }
 
-  .logout-icon { font-size: 0.85rem; }
+  .logout-icon {
+    font-size: 0.85rem;
+  }
 
   @media (max-width: 480px) {
-    .logout-label { display: none; }
+    .logout-label {
+      display: none;
+    }
     padding: 0.4rem 0.6rem;
+  }
+}
+
+// Credits dropdown styles
+.credits-dropdown {
+  position: relative;
+}
+
+.credits-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.4rem 0.85rem;
+  background: rgba(251, 191, 36, 0.1);
+  border: 0.5px solid rgba(251, 191, 36, 0.3);
+  border-radius: 9px;
+  color: #fbbf24;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all $transition;
+  font-family: inherit;
+
+  &:hover {
+    background: rgba(251, 191, 36, 0.15);
+    border-color: rgba(251, 191, 36, 0.5);
+  }
+
+  .credits-icon {
+    font-size: 0.85rem;
+  }
+
+  @media (max-width: 480px) {
+    .credits-label {
+      display: none;
+    }
+    padding: 0.4rem 0.6rem;
+  }
+}
+
+.credits-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 1000;
+  min-width: 300px;
+
+  // Arrow
+  &::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 20px;
+    width: 12px;
+    height: 12px;
+    background: #1e293b;
+    transform: rotate(45deg);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
   }
 }

@@ -1,0 +1,41 @@
+<div class="credits-card" *ngIf="!isLoading()">
+  <div class="credits-header">
+    <mat-icon class="credits-icon">stars</mat-icon>
+    <span class="credits-title">Your Credits</span>
+    <button class="refresh-btn" (click)="refresh()" matTooltip="Refresh credits">
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </div>
+
+  <div class="credits-list">
+    <div
+      *ngFor="let info of creditInfo"
+      class="credit-item"
+      [class.unlimited]="info.freeTierCredits === 'unlimited'"
+      [class.low-credits]="isLowCredits(info)"
+      [matTooltip]="info.description"
+    >
+      <div class="credit-color" [style.background-color]="info.color"></div>
+      <div class="credit-info">
+        <span class="credit-name">{{ info.displayName }}</span>
+        <span class="credit-description">{{ info.description }}</span>
+      </div>
+      <div class="credit-value" [style.color]="info.color">
+        <span class="credits-remaining">{{ getCreditsDisplay(info.modelTier) }}</span>
+        <span class="credits-total" *ngIf="info.freeTierCredits !== 'unlimited' && !isAdmin()">
+          / {{ info.freeTierCredits }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-badge" *ngIf="isAdmin()">
+    <mat-icon>admin_panel_settings</mat-icon>
+    <span>Admin - Unlimited</span>
+  </div>
+</div>
+
+<div class="credits-card loading" *ngIf="isLoading()">
+  <mat-icon class="loading-icon">sync</mat-icon>
+  <span>Loading credits...</span>
+</div>

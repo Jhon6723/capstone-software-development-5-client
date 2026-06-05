@@ -5,15 +5,24 @@
   </a>
 
   <div class="nav-links">
-    <a class="nav-link" routerLink="/dashboard" routerLinkActive="active">
-      Home
-    </a>
-    <a class="nav-link" routerLink="/projects" routerLinkActive="active">
-      Proyectos
-    </a>
+    <a class="nav-link" routerLink="/dashboard" routerLinkActive="active">Home</a>
+    <a class="nav-link" routerLink="/projects" routerLinkActive="active">Proyectos</a>
   </div>
 
   <div class="nav-actions">
+    <!-- Credits Dropdown -->
+    <div class="credits-dropdown">
+      <button class="credits-toggle" (click)="showCredits = !showCredits" aria-label="Ver créditos">
+        <span class="credits-icon">⭐</span>
+        <span class="credits-label">Créditos</span>
+      </button>
+      @if (showCredits) {
+        <div class="credits-menu">
+          <app-credits-card></app-credits-card>
+        </div>
+      }
+    </div>
+
     @if (currentUser(); as user) {
       <div class="nav-user">
         <div class="user-avatar">{{ userInitial }}</div>
